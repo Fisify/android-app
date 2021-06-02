@@ -27,7 +27,7 @@ public class NotificationWorker extends Worker
         Intent intent = new Intent(context, Main.class);
         PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, 0);
 
-        Notification notification = new NotificationCompat.Builder(context, "FISIFY_CHANNEL_ID").setSmallIcon(R.drawable.logo).setContentTitle("Fisify").setContentText("Your next session is ready").setPriority(NotificationCompat.PRIORITY_MAX).setContentIntent(pendingIntent).setAutoCancel(true).build();
+        Notification notification = new NotificationCompat.Builder(context, "FISIFY_CHANNEL_ID").setSmallIcon(R.drawable.logo).setContentTitle("Fisify").setContentText(context.getString(R.string.notification_text)).setPriority(NotificationCompat.PRIORITY_MAX).setContentIntent(pendingIntent).setAutoCancel(true).build();
         NotificationManagerCompat.from(context).notify(1, notification);
 
         return Result.success();

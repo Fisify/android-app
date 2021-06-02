@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">Fisify</string>
+    <string name="notification_text">Tu próxima sesión está lista</string>
 </resources>
