@@ -5,13 +5,17 @@ import android.app.NotificationManager;
 import android.content.Context;
 import android.os.Build;
 import android.os.Bundle;
-import android.util.Log;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.ImageView;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.work.OneTimeWorkRequest;
+import androidx.work.WorkManager;
+import androidx.work.WorkRequest;
+
+import java.util.concurrent.TimeUnit;
 
 public class Main extends AppCompatActivity
 {
@@ -31,43 +35,9 @@ public class Main extends AppCompatActivity
         showWebViewWhenLoaded();
 
         registerNotificationChannelForAndroidVersion26plus();
-        //connectToJavascript();
+        listenForNotificationRequestsFromJavascript();
 
-        /*
-        WebView web = new WebView(getApplicationContext());
-
-        web.getSettings().setJavaScriptEnabled(true);
-        web.addJavascriptInterface(new WebAppInterface(this), "Android");
-
-        web.setWebViewClient(new WebViewClient()
-        {
-            @Override
-            public void onPageFinished(WebView view, String url) {
-                super.onPageFinished(view, url);
-                Log.e("Martin", "finished");
-                setContentView(web);
-            }
-        });
-
-        web.loadUrl("https://app.fisify.com/?id=601988a64c97b4000440a242");
-
-        // Test webpage hosted in Gitlab to test JS to Java communication
-        //web.loadUrl("https://martin-azpillaga.gitlab.io/web-experiments");
-
-        // Notifications
-        // createNotificationChannel();
-        /*
-        WorkRequest requestNotification = new OneTimeWorkRequest.Builder(NotificationWorker.class).setInitialDelay(5, TimeUnit.SECONDS).build();
-        WorkManager.getInstance(context).enqueue(requestNotification);
-
-
-        WorkRequest longRequestNotification = new OneTimeWorkRequest.Builder(NotificationWorker.class).setInitialDelay(50, TimeUnit.SECONDS).build();
-        WorkManager.getInstance(context).enqueue(longRequestNotification);
-
-
-        WorkRequest minutesNotification = new OneTimeWorkRequest.Builder(NotificationWorker.class).setInitialDelay(10, TimeUnit.MINUTES).build();
-        WorkManager.getInstance(context).enqueue(minutesNotification);
-        */
+        showNotificationAfterSeconds(15);
     }
 
     private void showSplashScreen()
@@ -107,7 +77,7 @@ public class Main extends AppCompatActivity
         }
     }
 
-    private void connectToJavascript()
+    private void listenForNotificationRequestsFromJavascript()
     {
         web.addJavascriptInterface(this, "Android");
     }
@@ -115,6 +85,7 @@ public class Main extends AppCompatActivity
     @JavascriptInterface
     public void showNotificationAfterSeconds(int seconds)
     {
-
+        WorkRequest requestNotification = new OneTimeWorkRequest.Builder(NotificationWorker.class).setInitialDelay(seconds, TimeUnit.SECONDS).build();
+        WorkManager.getInstance(context).enqueue(requestNotification);
     }
 }
