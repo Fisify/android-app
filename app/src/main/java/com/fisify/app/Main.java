@@ -15,6 +15,8 @@ import androidx.appcompat.app.AppCompatActivity;
 public class Main extends AppCompatActivity
 {
     Context context;
+    ImageView splash;
+    WebView web;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -24,6 +26,9 @@ public class Main extends AppCompatActivity
 
         showSplashScreen();
 
+        loadWebView();
+        listenToEnd();
+        //connectToJavascript();
 
         /*
         WebView web = new WebView(getApplicationContext());
@@ -64,9 +69,34 @@ public class Main extends AppCompatActivity
 
     private void showSplashScreen()
     {
-        ImageView splash = new ImageView(context);
+        splash = new ImageView(context);
         splash.setImageResource(R.drawable.logo);
         setContentView(splash);
+    }
+
+    private void loadWebView()
+    {
+        web = new WebView(context);
+        web.getSettings().setJavaScriptEnabled(true);
+        web.loadUrl("https://app.fisify.com/?id=601988a64c97b4000440a242");
+
+    }
+
+    private void listenToEnd()
+    {
+        web.setWebViewClient(new WebViewClient()
+        {
+            @Override
+            public void onPageFinished(WebView view, String url)
+            {
+                setContentView(web);
+            }
+        });
+    }
+
+    private void connectToJavascript()
+    {
+        //web.addJavascriptInterface(new WebAppInterface(this), "Android");
     }
 
 
