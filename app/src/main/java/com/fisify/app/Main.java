@@ -6,6 +6,7 @@ import android.content.Context;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
+import android.webkit.JavascriptInterface;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.ImageView;
@@ -26,8 +27,10 @@ public class Main extends AppCompatActivity
 
         showSplashScreen();
 
-        loadWebView();
-        listenToEnd();
+        startLoadingWebView();
+        showWebViewWhenLoaded();
+
+        registerNotificationChannelForAndroidVersion26plus();
         //connectToJavascript();
 
         /*
@@ -74,15 +77,14 @@ public class Main extends AppCompatActivity
         setContentView(splash);
     }
 
-    private void loadWebView()
+    private void startLoadingWebView()
     {
         web = new WebView(context);
         web.getSettings().setJavaScriptEnabled(true);
         web.loadUrl("https://app.fisify.com/?id=601988a64c97b4000440a242");
-
     }
 
-    private void listenToEnd()
+    private void showWebViewWhenLoaded()
     {
         web.setWebViewClient(new WebViewClient()
         {
@@ -94,25 +96,25 @@ public class Main extends AppCompatActivity
         });
     }
 
-    private void connectToJavascript()
+    private void registerNotificationChannelForAndroidVersion26plus()
     {
-        //web.addJavascriptInterface(new WebAppInterface(this), "Android");
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+        {
+            NotificationChannel channel = new NotificationChannel("FISIFY_CHANNEL_ID", "FISIFY_CHANNEL", NotificationManager.IMPORTANCE_HIGH);
+            channel.setDescription("FISIFY_NOTIFICATIONS");
+
+            getSystemService(NotificationManager.class).createNotificationChannel(channel);
+        }
     }
 
+    private void connectToJavascript()
+    {
+        web.addJavascriptInterface(this, "Android");
+    }
 
-    private void createNotificationChannel() {
-        // Create the NotificationChannel, but only on API 26+ because
-        // the NotificationChannel class is new and not in the support library
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            CharSequence name = "FISIFY_CHANNEL";
-            String description = "FISIFY_NOTIFICATIONS";
-            int importance = NotificationManager.IMPORTANCE_HIGH;
-            NotificationChannel channel = new NotificationChannel("FISIFY_CHANNEL_ID", name, importance);
-            channel.setDescription(description);
-            // Register the channel with the system; you can't change the importance
-            // or other notification behaviors after this
-            NotificationManager notificationManager = getSystemService(NotificationManager.class);
-            notificationManager.createNotificationChannel(channel);
-        }
+    @JavascriptInterface
+    public void showNotificationAfterSeconds(int seconds)
+    {
+
     }
 }
