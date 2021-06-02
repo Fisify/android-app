@@ -15,6 +15,7 @@ import androidx.appcompat.app.AppCompatActivity;
 public class Main extends AppCompatActivity
 {
     Context context;
+
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
@@ -64,7 +65,7 @@ public class Main extends AppCompatActivity
     private void showSplashScreen()
     {
         ImageView splash = new ImageView(context);
-        splash.setImageResource(R.drawable.ic_launcher_foreground);
+        splash.setImageResource(R.drawable.logo);
         setContentView(splash);
     }
 
