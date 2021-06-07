@@ -43,7 +43,7 @@ public class Main extends AppCompatActivity
     private void showSplashScreen()
     {
         splash = new ImageView(context);
-        splash.setImageResource(R.drawable.logo);
+        splash.setImageResource(R.drawable.logo_black);
         setContentView(splash);
     }
 
