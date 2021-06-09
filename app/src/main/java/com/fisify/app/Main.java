@@ -51,7 +51,12 @@ public class Main extends AppCompatActivity
     {
         web = new WebView(context);
         web.getSettings().setJavaScriptEnabled(true);
-        web.loadUrl("https://app.fisify.com");
+        int SDK_INT = Build.VERSION.SDK_INT;
+        if (SDK_INT > 16)
+        {
+            web.getSettings().setMediaPlaybackRequiresUserGesture(false);
+        }
+        web.loadUrl("https://app.fisify.com/?id=60b51db25be0540004f5ec9b");
     }
 
     private void showWebViewWhenLoaded()
