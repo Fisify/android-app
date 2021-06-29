@@ -51,12 +51,14 @@ public class Main extends AppCompatActivity
     {
         web = new WebView(context);
         web.getSettings().setJavaScriptEnabled(true);
+        web.getSettings().setDomStorageEnabled(true);
+        web.getSettings().setUserAgentString("Mozilla/5.0 (Linux; Android 4.1.1; Galaxy Nexus Build/JRO03C) AppleWebKit/535.19 (KHTML, like Gecko) Chrome/18.0.1025.166 Mobile Safari/535.19");
         int SDK_INT = Build.VERSION.SDK_INT;
         if (SDK_INT > 16)
         {
             web.getSettings().setMediaPlaybackRequiresUserGesture(false);
         }
-        web.loadUrl("https://app.fisify.com/?id=60b51db25be0540004f5ec9b");
+        web.loadUrl("https://staging-frontend-fisify.herokuapp.com/");
     }
 
     private void showWebViewWhenLoaded()
