@@ -5,10 +5,14 @@ import android.app.NotificationManager;
 import android.content.Context;
 import android.os.Build;
 import android.os.Bundle;
+import android.view.Gravity;
+import android.view.ViewGroup;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.work.OneTimeWorkRequest;
@@ -37,14 +41,20 @@ public class Main extends AppCompatActivity
         registerNotificationChannelForAndroidVersion26plus();
         listenForNotificationRequestsFromJavascript();
 
-        showNotificationAfterSeconds(15);
+        showNotificationAfterSeconds(5);
     }
 
     private void showSplashScreen()
     {
         splash = new ImageView(context);
-        splash.setImageResource(R.drawable.logo_black);
-        setContentView(splash);
+        splash.setImageResource(R.drawable.logo_transparent);
+        RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        params.addRule(RelativeLayout.CENTER_IN_PARENT);
+        splash.setLayoutParams(params);
+
+        RelativeLayout layout = new RelativeLayout(context);
+        layout.addView(splash);
+        setContentView(layout);
     }
 
     private void startLoadingWebView()
