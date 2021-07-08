@@ -47,9 +47,10 @@ public class Main extends AppCompatActivity
     private void showSplashScreen()
     {
         splash = new ImageView(context);
-        splash.setImageResource(R.drawable.logo_transparent);
-        RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        params.addRule(RelativeLayout.CENTER_IN_PARENT);
+        splash.setScaleType(ImageView.ScaleType.CENTER_CROP);
+        splash.setImageResource(R.drawable.splashscreen);
+        RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
+
         splash.setLayoutParams(params);
 
         RelativeLayout layout = new RelativeLayout(context);
