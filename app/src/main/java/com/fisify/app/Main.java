@@ -69,7 +69,7 @@ public class Main extends AppCompatActivity
         {
             web.getSettings().setMediaPlaybackRequiresUserGesture(false);
         }
-        web.loadUrl("https://staging-frontend-fisify.herokuapp.com/");
+        web.loadUrl("https://staging-frontend-fisify.herokuapp.com");
     }
 
     private void showWebViewWhenLoaded()
