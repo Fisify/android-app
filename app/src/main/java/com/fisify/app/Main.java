@@ -55,6 +55,13 @@ public class Main extends AppCompatActivity
     {
         if (Build.VERSION.SDK_INT > 19)
         {
+            web.evaluateJavascript("location.href", value ->
+            {
+                if (value.endsWith("/login\""))
+                {
+                    finish();
+                }
+            });
             web.evaluateJavascript("history.back()",null);
         }
     }
