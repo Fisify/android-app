@@ -46,8 +46,6 @@ public class Main extends AppCompatActivity
 
         registerNotificationChannelForAndroidVersion26plus();
         listenForNotificationRequestsFromJavascript();
-
-        showNotificationAfterSeconds(5);
     }
 
     @Override
@@ -59,10 +57,11 @@ public class Main extends AppCompatActivity
             {
                 if (value.endsWith("/login\""))
                 {
-                    finish();
+                    //finish();
                 }
             });
             web.evaluateJavascript("history.back()",null);
+            web.evaluateJavascript("Android", value -> Log.e(value, "Fisify"));
         }
     }
 
@@ -77,7 +76,9 @@ public class Main extends AppCompatActivity
 
         RelativeLayout layout = new RelativeLayout(context);
         layout.addView(splash);
-        setContentView(layout);
+        //setContentView(layout);
+        setContentView(R.layout.splash);
+
     }
 
     private void startLoadingWebView()
@@ -86,12 +87,12 @@ public class Main extends AppCompatActivity
         web.getSettings().setJavaScriptEnabled(true);
         web.getSettings().setDomStorageEnabled(true);
         web.getSettings().setUserAgentString("Mozilla/5.0 (Linux; Android 4.1.1; Galaxy Nexus Build/JRO03C) AppleWebKit/535.19 (KHTML, like Gecko) Chrome/18.0.1025.166 Mobile Safari/535.19");
-        int SDK_INT = Build.VERSION.SDK_INT;
-        if (SDK_INT > 16)
+        if (Build.VERSION.SDK_INT > 16)
         {
             web.getSettings().setMediaPlaybackRequiresUserGesture(false);
         }
         web.loadUrl("https://staging-frontend-fisify.herokuapp.com");
+        //web.loadUrl("http://192.168.0.87:3000");
     }
 
     private void showWebViewWhenLoaded()
@@ -126,7 +127,10 @@ public class Main extends AppCompatActivity
 
     private void listenForNotificationRequestsFromJavascript()
     {
-        web.addJavascriptInterface(this, "Android");
+        if (Build.VERSION.SDK_INT > 17)
+        {
+            web.addJavascriptInterface(this, "Android");
+        }
     }
 
     @JavascriptInterface
