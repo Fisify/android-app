@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.Context;
+import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -18,11 +19,20 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 
+import androidx.activity.result.ActivityResultCallback;
+import androidx.activity.result.ActivityResultLauncher;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.work.OneTimeWorkRequest;
 import androidx.work.WorkManager;
 import androidx.work.WorkRequest;
 
+
+import com.firebase.ui.auth.AuthUI;
+import com.firebase.ui.auth.FirebaseAuthUIActivityResultContract;
+import com.firebase.ui.auth.data.model.FirebaseAuthUIAuthenticationResult;
+
+import java.util.Arrays;
+import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
@@ -39,6 +49,22 @@ public class Main extends AppCompatActivity
         super.onCreate(savedInstanceState);
         context = getApplicationContext();
 
+        /*
+        ActivityResultLauncher<Intent> signInLauncher = registerForActivityResult(new FirebaseAuthUIActivityResultContract(), new ActivityResultCallback<FirebaseAuthUIAuthenticationResult>() {
+            @Override
+            public void onActivityResult(FirebaseAuthUIAuthenticationResult result)
+            {
+                Log.e("Fisify", "Sign in completed");
+            }
+        });
+
+        List<AuthUI.IdpConfig> providers = Arrays.asList(new AuthUI.IdpConfig.EmailBuilder().build(), new AuthUI.IdpConfig.GoogleBuilder().build());
+
+        Intent signInIntent = AuthUI.getInstance().createSignInIntentBuilder().setAvailableProviders(providers).build();
+        signInLauncher.launch(signInIntent);
+        */
+
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
             WebView.setWebContentsDebuggingEnabled(true);
         }
@@ -50,6 +76,7 @@ public class Main extends AppCompatActivity
 
         registerNotificationChannelForAndroidVersion26plus();
         listenForNotificationRequestsFromJavascript();
+
     }
 
     @Override
@@ -59,7 +86,7 @@ public class Main extends AppCompatActivity
         {
             web.evaluateJavascript("location.href", value ->
             {
-                if (value.endsWith("/login\""))
+                if (value.endsWith("/login\"") || value.endsWith("/home\""))
                 {
                     finish();
                 }
@@ -99,7 +126,6 @@ public class Main extends AppCompatActivity
             web.getSettings().setMediaPlaybackRequiresUserGesture(false);
         }
         web.loadUrl("https://staging-frontend-fisify.herokuapp.com/home");
-        //web.loadUrl("http://192.168.0.87:3000");
     }
 
     private void showWebViewWhenLoaded()
@@ -113,10 +139,13 @@ public class Main extends AppCompatActivity
                 final Handler handler = new Handler(Looper.getMainLooper());
                 handler.postDelayed(new Runnable() {
                     @Override
-                    public void run() {
+                    public void run()
+                    {
                         activity.setContentView(web);
+                        getWindow().setNavigationBarColor(getResources().getColor(R.color.fisifyBackground));
+                        getWindow().setStatusBarColor(getResources().getColor(R.color.fisifyBackground));
                     }
-                }, 3000);
+                }, 2000);
             }
         });
     }
