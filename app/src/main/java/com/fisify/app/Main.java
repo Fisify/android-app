@@ -5,13 +5,17 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
 import android.view.Gravity;
+import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
+import android.view.WindowManager;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -40,34 +44,18 @@ import java.util.concurrent.TimeUnit;
 public class Main extends AppCompatActivity
 {
     Context context;
-    ImageView splash;
+    Window window;
     WebView web;
+
+    int SPLASHSCREEN_DELAY_AFTER_PAGE_LOADED = 2000;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
+
         context = getApplicationContext();
-
-        /*
-        ActivityResultLauncher<Intent> signInLauncher = registerForActivityResult(new FirebaseAuthUIActivityResultContract(), new ActivityResultCallback<FirebaseAuthUIAuthenticationResult>() {
-            @Override
-            public void onActivityResult(FirebaseAuthUIAuthenticationResult result)
-            {
-                Log.e("Fisify", "Sign in completed");
-            }
-        });
-
-        List<AuthUI.IdpConfig> providers = Arrays.asList(new AuthUI.IdpConfig.EmailBuilder().build(), new AuthUI.IdpConfig.GoogleBuilder().build());
-
-        Intent signInIntent = AuthUI.getInstance().createSignInIntentBuilder().setAvailableProviders(providers).build();
-        signInLauncher.launch(signInIntent);
-        */
-
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            WebView.setWebContentsDebuggingEnabled(true);
-        }
+        window = getWindow();
 
         showSplashScreen();
 
@@ -76,76 +64,67 @@ public class Main extends AppCompatActivity
 
         registerNotificationChannelForAndroidVersion26plus();
         listenForNotificationRequestsFromJavascript();
-
     }
 
     @Override
     public void onBackPressed()
     {
-        if (Build.VERSION.SDK_INT > 19)
+        web.evaluateJavascript("location.href", value ->
         {
-            web.evaluateJavascript("location.href", value ->
+            if (value.endsWith("/login\"") || value.endsWith("/home\""))
             {
-                if (value.endsWith("/login\"") || value.endsWith("/home\""))
-                {
-                    finish();
-                }
-            });
-            web.evaluateJavascript("history.back()",null);
-            web.evaluateJavascript("Android", value -> Log.e(value, "Fisify"));
-        }
+                finish();
+            }
+            else
+            {
+                web.evaluateJavascript("history.back()",null);
+            }
+        });
     }
 
     private void showSplashScreen()
     {
-        splash = new ImageView(context);
-        splash.setScaleType(ImageView.ScaleType.CENTER_CROP);
-        splash.setImageResource(R.drawable.splashscreen);
-        RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
-
-        splash.setLayoutParams(params);
-
-        RelativeLayout layout = new RelativeLayout(context);
-        layout.addView(splash);
-        //setContentView(layout);
         setContentView(R.layout.splash);
-
     }
 
     private void startLoadingWebView()
     {
+        WebView.setWebContentsDebuggingEnabled(true);
+
         web = new WebView(context);
         web.getSettings().setJavaScriptEnabled(true);
         web.getSettings().setDomStorageEnabled(true);
         web.getSettings().setDatabaseEnabled(true);
         web.getSettings().setDatabasePath(getDatabasePath("fisifyDB").getPath());
         web.getSettings().setAppCacheEnabled(true);
-        web.getSettings().setUserAgentString("Mozilla/5.0 (Linux; Android 4.1.1; Galaxy Nexus Build/JRO03C) AppleWebKit/535.19 (KHTML, like Gecko) Chrome/18.0.1025.166 Mobile Safari/535.19");
-        if (Build.VERSION.SDK_INT > 16)
-        {
-            web.getSettings().setMediaPlaybackRequiresUserGesture(false);
-        }
+        web.getSettings().setMediaPlaybackRequiresUserGesture(false);
+
+        // Necessary for firebase login with google
+        //web.getSettings().setUserAgentString("Mozilla/5.0 (Linux; Android 4.1.1; Galaxy Nexus Build/JRO03C) AppleWebKit/535.19 (KHTML, like Gecko) Chrome/18.0.1025.166 Mobile Safari/535.19");
+
         web.loadUrl("https://staging-frontend-fisify.herokuapp.com/home");
     }
 
     private void showWebViewWhenLoaded()
     {
         Activity activity = this;
+
         web.setWebViewClient(new WebViewClient()
         {
             @Override
             public void onPageFinished(WebView view, String url)
             {
-                final Handler handler = new Handler(Looper.getMainLooper());
-                handler.postDelayed(new Runnable() {
+                final Handler timer = new Handler(Looper.getMainLooper());
+
+                timer.postDelayed(new Runnable() {
                     @Override
                     public void run()
                     {
                         activity.setContentView(web);
-                        getWindow().setNavigationBarColor(getResources().getColor(R.color.fisifyBackground));
-                        getWindow().setStatusBarColor(getResources().getColor(R.color.fisifyBackground));
+                        window.setNavigationBarColor(getResources().getColor(R.color.fisifyBackground));
+                        window.setStatusBarColor(getResources().getColor(R.color.fisifyBackground));
                     }
-                }, 2000);
+                }, SPLASHSCREEN_DELAY_AFTER_PAGE_LOADED);
             }
         });
     }
@@ -163,10 +142,7 @@ public class Main extends AppCompatActivity
 
     private void listenForNotificationRequestsFromJavascript()
     {
-        if (Build.VERSION.SDK_INT > 17)
-        {
-            web.addJavascriptInterface(this, "Android");
-        }
+        web.addJavascriptInterface(this, "Android");
     }
 
     @JavascriptInterface
@@ -174,5 +150,29 @@ public class Main extends AppCompatActivity
     {
         WorkRequest requestNotification = new OneTimeWorkRequest.Builder(NotificationWorker.class).setInitialDelay(seconds, TimeUnit.SECONDS).build();
         WorkManager.getInstance(context).enqueue(requestNotification);
+    }
+
+    @JavascriptInterface
+    public void fullScreen()
+    {
+        getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_FULLSCREEN);
+    }
+
+    @JavascriptInterface
+    public void normalScreen()
+    {
+        getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_VISIBLE);
+    }
+
+    @JavascriptInterface
+    public void landscape()
+    {
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+    }
+
+    @JavascriptInterface
+    public void portrait()
+    {
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
     }
 }
