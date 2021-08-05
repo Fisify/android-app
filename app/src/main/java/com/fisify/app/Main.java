@@ -102,7 +102,7 @@ public class Main extends AppCompatActivity
         // Necessary for firebase login with google
         //web.getSettings().setUserAgentString("Mozilla/5.0 (Linux; Android 4.1.1; Galaxy Nexus Build/JRO03C) AppleWebKit/535.19 (KHTML, like Gecko) Chrome/18.0.1025.166 Mobile Safari/535.19");
 
-        web.loadUrl("https://staging-frontend-fisify.herokuapp.com/home");
+        web.loadUrl("https://production-frontend-fisify.herokuapp.com/");
     }
 
     private void showWebViewWhenLoaded()
@@ -155,13 +155,27 @@ public class Main extends AppCompatActivity
     @JavascriptInterface
     public void fullScreen()
     {
-        getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_FULLSCREEN);
+        runOnUiThread(new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_IMMERSIVE);
+            }
+        });
     }
 
     @JavascriptInterface
     public void normalScreen()
     {
-        getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_VISIBLE);
+        runOnUiThread(new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_VISIBLE);
+            }
+        });
     }
 
     @JavascriptInterface
