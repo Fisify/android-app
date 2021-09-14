@@ -21,6 +21,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.work.OneTimeWorkRequest;
 import androidx.work.WorkManager;
 import androidx.work.WorkRequest;
+import androidx.work.Data;
 
 import java.util.concurrent.TimeUnit;
 
@@ -137,9 +138,10 @@ public class Main extends AppCompatActivity
     }
 
     @JavascriptInterface
-    public void showNotificationAfterSeconds(int seconds)
+    public void showNotificationAfterSeconds(int seconds, String text)
     {
-        WorkRequest requestNotification = new OneTimeWorkRequest.Builder(NotificationWorker.class).setInitialDelay(seconds, TimeUnit.SECONDS).addTag("notification").build();
+        Data data = new Data.Builder().putString("notificationText", text).build();
+        WorkRequest requestNotification = new OneTimeWorkRequest.Builder(NotificationWorker.class).setInputData(data).setInitialDelay(seconds, TimeUnit.SECONDS).addTag("notification").build();
         WorkManager.getInstance(context).enqueue(requestNotification);
     }
 
