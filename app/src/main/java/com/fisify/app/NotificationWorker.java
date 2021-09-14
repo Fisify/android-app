@@ -10,6 +10,8 @@ import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 import androidx.work.Worker;
 import androidx.work.WorkerParameters;
+import java.util.Date;
+import java.util.Locale;
 
 public class NotificationWorker extends Worker
 {
@@ -27,8 +29,15 @@ public class NotificationWorker extends Worker
         PendingIntent pendingIntent = PendingIntent.getActivity(this.context, 0, intent, 0);
 
         Notification notification = new NotificationCompat.Builder(this.context, "FISIFY_CHANNEL_ID").setSmallIcon(R.drawable.notifications_logo).setContentTitle("Fisify").setContentText(text).setPriority(NotificationCompat.PRIORITY_MAX).setContentIntent(pendingIntent).setAutoCancel(true).build();
-        NotificationManagerCompat.from(this.context).notify(1, notification);
+        NotificationManagerCompat.from(this.context).notify(createID(), notification);
 
         return Result.success();
     }
+
+    public int createID()
+    {
+        Date now = new Date();
+        int id = Integer.parseInt(new SimpleDateFormat("ddHHmmss",  Locale.US).format(now));
+        return id;
+     }
 }
