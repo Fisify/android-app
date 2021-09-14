@@ -9,9 +9,12 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
 import android.view.View;
 import android.view.Window;
 import android.webkit.JavascriptInterface;
+import android.webkit.JsResult;
+import android.webkit.WebChromeClient;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
@@ -41,6 +44,7 @@ public class Main extends AppCompatActivity
         showSplashScreen();
 
         startLoadingWebView();
+        acceptBeforeUnloadAlertsAutomatically();
         showWebViewWhenLoaded();
 
         registerNotificationChannelForAndroidVersion26plus();
@@ -73,19 +77,24 @@ public class Main extends AppCompatActivity
         WebView.setWebContentsDebuggingEnabled(true);
 
         web = new WebView(context);
+
         web.getSettings().setJavaScriptEnabled(true);
         web.getSettings().setDomStorageEnabled(true);
-        web.getSettings().setDatabaseEnabled(true);
-        web.getSettings().setDatabasePath(getDatabasePath("fisifyDB").getPath());
-        web.getSettings().setAppCacheEnabled(true);
         web.getSettings().setMediaPlaybackRequiresUserGesture(false);
 
-        // mikel@production.com
-        // mikelmikel
-        // Necessary for firebase login with google
-        //web.getSettings().setUserAgentString("Mozilla/5.0 (Linux; Android 4.1.1; Galaxy Nexus Build/JRO03C) AppleWebKit/535.19 (KHTML, like Gecko) Chrome/18.0.1025.166 Mobile Safari/535.19");
-
         web.loadUrl("https://production-frontend-fisify.herokuapp.com/");
+    }
+
+    private void acceptBeforeUnloadAlertsAutomatically()
+    {
+        WebChromeClient webChromeClient = new WebChromeClient() {
+            @Override
+            public boolean onJsBeforeUnload(WebView view, String url, String message, JsResult result) {
+                result.confirm();
+                return super.onJsBeforeUnload(view, url, message, result);
+            }
+        };
+        web.setWebChromeClient(webChromeClient);
     }
 
     private void showWebViewWhenLoaded()
