@@ -139,8 +139,14 @@ public class Main extends AppCompatActivity
     @JavascriptInterface
     public void showNotificationAfterSeconds(int seconds)
     {
-        WorkRequest requestNotification = new OneTimeWorkRequest.Builder(NotificationWorker.class).setInitialDelay(seconds, TimeUnit.SECONDS).build();
+        WorkRequest requestNotification = new OneTimeWorkRequest.Builder(NotificationWorker.class).setInitialDelay(seconds, TimeUnit.SECONDS).addTag("notification").build();
         WorkManager.getInstance(context).enqueue(requestNotification);
+    }
+
+    @JavascriptInterface
+    public void cancelAllNotifications()
+    {
+        WorkManager.cancelAllWorkByTag("notification");
     }
 
     @JavascriptInterface
