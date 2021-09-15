@@ -82,7 +82,8 @@ public class Main extends AppCompatActivity
         web.getSettings().setDomStorageEnabled(true);
         web.getSettings().setMediaPlaybackRequiresUserGesture(false);
 
-        web.loadUrl("https://production-frontend-fisify.herokuapp.com/");
+        web.loadUrl("http://192.168.1.156:3001");
+        //web.loadUrl("https://production-frontend-fisify.herokuapp.com/");
     }
 
     private void acceptBeforeUnloadAlertsAutomatically()
@@ -108,14 +109,11 @@ public class Main extends AppCompatActivity
             {
                 final Handler timer = new Handler(Looper.getMainLooper());
 
-                timer.postDelayed(new Runnable() {
-                    @Override
-                    public void run()
-                    {
-                        activity.setContentView(web);
-                        window.setNavigationBarColor(getResources().getColor(R.color.fisifyBackground));
-                        window.setStatusBarColor(getResources().getColor(R.color.fisifyBackground));
-                    }
+                timer.postDelayed(() ->
+                {
+                    activity.setContentView(web);
+                    window.setNavigationBarColor(getResources().getColor(R.color.fisifyBackground));
+                    window.setStatusBarColor(getResources().getColor(R.color.fisifyBackground));
                 }, SPLASHSCREEN_DELAY_AFTER_PAGE_LOADED);
             }
         });
@@ -148,32 +146,24 @@ public class Main extends AppCompatActivity
     @JavascriptInterface
     public void cancelAllNotifications()
     {
-        WorkManager.cancelAllWorkByTag("notification");
+        WorkManager.getInstance(context).cancelAllWorkByTag("notification");
     }
 
     @JavascriptInterface
     public void fullScreen()
     {
-        runOnUiThread(new Runnable()
+        runOnUiThread(() ->
         {
-            @Override
-            public void run()
-            {
-                getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_IMMERSIVE);
-            }
+            getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_IMMERSIVE);
         });
     }
 
     @JavascriptInterface
     public void normalScreen()
     {
-        runOnUiThread(new Runnable()
+        runOnUiThread(() ->
         {
-            @Override
-            public void run()
-            {
-                getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_VISIBLE);
-            }
+            getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_VISIBLE);
         });
     }
 

@@ -10,14 +10,18 @@ import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 import androidx.work.Worker;
 import androidx.work.WorkerParameters;
+
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
 public class NotificationWorker extends Worker
 {
+    Context context;
     public NotificationWorker(@NonNull Context context, @NonNull WorkerParameters workerParams)
     {
         super(context, workerParams);
+        this.context = context;
     }
 
     @NonNull
@@ -25,11 +29,11 @@ public class NotificationWorker extends Worker
     public Result doWork()
     {
         String text = getInputData().getString("notificationText");
-        Intent intent = new Intent(this.context, Main.class);
-        PendingIntent pendingIntent = PendingIntent.getActivity(this.context, 0, intent, 0);
+        Intent intent = new Intent(context, Main.class);
+        PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, 0);
 
-        Notification notification = new NotificationCompat.Builder(this.context, "FISIFY_CHANNEL_ID").setSmallIcon(R.drawable.notifications_logo).setContentTitle("Fisify").setContentText(text).setPriority(NotificationCompat.PRIORITY_MAX).setContentIntent(pendingIntent).setAutoCancel(true).build();
-        NotificationManagerCompat.from(this.context).notify(createID(), notification);
+        Notification notification = new NotificationCompat.Builder(context, "FISIFY_CHANNEL_ID").setSmallIcon(R.drawable.notifications_logo).setContentTitle("Fisify").setContentText(text).setPriority(NotificationCompat.PRIORITY_MAX).setContentIntent(pendingIntent).setAutoCancel(true).build();
+        NotificationManagerCompat.from(context).notify(createID(), notification);
 
         return Result.success();
     }
