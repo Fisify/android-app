@@ -17,31 +17,34 @@ import java.util.Locale;
 
 public class NotificationWorker extends Worker
 {
-    Context context;
-    public NotificationWorker(@NonNull Context context, @NonNull WorkerParameters workerParams)
-    {
-        super(context, workerParams);
-        this.context = context;
-    }
+	static int incrementingID = 0;
 
-    @NonNull
-    @Override
-    public Result doWork()
-    {
-        String text = getInputData().getString("notificationText");
-        Intent intent = new Intent(context, Main.class);
-        PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, 0);
+	Context context;
+	public NotificationWorker(@NonNull Context context, @NonNull WorkerParameters workerParams)
+	{
+		super(context, workerParams);
+		this.context = context;
+	}
 
-        Notification notification = new NotificationCompat.Builder(context, "FISIFY_CHANNEL_ID").setSmallIcon(R.drawable.notifications_logo).setContentTitle("Fisify").setContentText(text).setPriority(NotificationCompat.PRIORITY_MAX).setContentIntent(pendingIntent).setAutoCancel(true).build();
-        NotificationManagerCompat.from(context).notify(createID(), notification);
+	@NonNull
+	@Override
+	public Result doWork()
+	{
+		String text = getInputData().getString("notificationText");
+		Intent intent = new Intent(context, Main.class);
+		PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, 0);
 
-        return Result.success();
-    }
+		Notification notification = new NotificationCompat.Builder(context, "FISIFY_CHANNEL_ID").setSmallIcon(R.drawable.notifications_logo).setContentTitle("Fisify").setContentText(text).setPriority(NotificationCompat.PRIORITY_MAX).setContentIntent(pendingIntent).setAutoCancel(true).build();
+		NotificationManagerCompat.from(context).notify(createID(), notification);
 
-    public int createID()
-    {
-        Date now = new Date();
-        int id = Integer.parseInt(new SimpleDateFormat("ddHHmmss",  Locale.US).format(now));
-        return id;
-     }
+		return Result.success();
+	}
+
+	public int createID()
+	{
+		Date now = new Date();
+		int id = Integer.parseInt(new SimpleDateFormat("ddHHmmssSS", Locale.US).format(now));
+		incrementingID++;
+		return id + incrementingID;
+	}
 }
