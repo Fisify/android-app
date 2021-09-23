@@ -9,6 +9,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
 import android.view.View;
 import android.view.Window;
 import android.webkit.JavascriptInterface;
@@ -49,6 +50,22 @@ public class Main extends AppCompatActivity
 
 		registerNotificationChannelForAndroidVersion26plus();
 		listenForNotificationRequestsFromJavascript();
+	}
+
+	@Override
+	protected void onResume()
+	{
+		super.onResume();
+		final Handler timer = new Handler(Looper.getMainLooper());
+
+		web.evaluateJavascript("window.initializeBeacon()",null);
+	}
+
+	@Override
+	protected void onPause()
+	{
+		super.onPause();
+		web.evaluateJavascript("window.sendBeacon()",null);
 	}
 
 	@Override
@@ -113,6 +130,7 @@ public class Main extends AppCompatActivity
 					activity.setContentView(web);
 					window.setNavigationBarColor(getResources().getColor(R.color.fisifyBackground));
 					window.setStatusBarColor(getResources().getColor(R.color.fisifyBackground));
+					web.evaluateJavascript("window.initializeBeacon()",null);
 				}, SPLASHSCREEN_DELAY_AFTER_PAGE_LOADED);
 			}
 		});

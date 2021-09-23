@@ -43,7 +43,7 @@ public class NotificationWorker extends Worker
 	public int createID()
 	{
 		Date now = new Date();
-		int id = Integer.parseInt(new SimpleDateFormat("ddHHmmssSS", Locale.US).format(now));
+		int id = Integer.parseInt(new SimpleDateFormat("ssSS", Locale.US).format(now));
 		incrementingID++;
 		return id + incrementingID;
 	}
