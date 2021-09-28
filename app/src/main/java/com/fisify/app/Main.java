@@ -1,9 +1,10 @@
 package com.fisify.app;
 
-import android.app.Activity;
+import   android.app.Activity;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.os.Build;
 import android.os.Bundle;
@@ -66,6 +67,7 @@ public class Main extends AppCompatActivity
 	{
 		super.onPause();
 		web.evaluateJavascript("window.sendBeacon()",null);
+		super.finishAndRemoveTask();
 	}
 
 	@Override
