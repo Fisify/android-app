@@ -1,6 +1,7 @@
 package com.fisify.app;
 
 import   android.app.Activity;
+import android.app.KeyguardManager;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.Context;
@@ -57,8 +58,6 @@ public class Main extends AppCompatActivity
 	protected void onResume()
 	{
 		super.onResume();
-		final Handler timer = new Handler(Looper.getMainLooper());
-
 		web.evaluateJavascript("window.initializeBeacon()",null);
 	}
 
@@ -67,7 +66,30 @@ public class Main extends AppCompatActivity
 	{
 		super.onPause();
 		web.evaluateJavascript("window.sendBeacon()",null);
-		super.finishAndRemoveTask();
+	}
+
+	@Override
+	protected void onUserLeaveHint()
+	{
+		super.onUserLeaveHint();
+	}
+
+	@Override
+	protected void onStop()
+	{
+		KeyguardManager myKM = (KeyguardManager) context.getSystemService(Context.KEYGUARD_SERVICE);
+		if( myKM.inKeyguardRestrictedInputMode()) {
+			Log.d("Locked","l");
+		} else {
+			super.finishAndRemoveTask();
+		}
+		super.onStop();
+	}
+
+	@Override
+	protected void onDestroy()
+	{
+		super.onDestroy();
 	}
 
 	@Override
