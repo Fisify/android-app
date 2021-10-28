@@ -1,11 +1,10 @@
 package com.fisify.app;
 
-import   android.app.Activity;
+import android.app.Activity;
 import android.app.KeyguardManager;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.Context;
-import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.os.Build;
 import android.os.Bundle;
@@ -21,15 +20,26 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.work.Data;
 import androidx.work.OneTimeWorkRequest;
 import androidx.work.WorkManager;
 import androidx.work.WorkRequest;
-import androidx.work.Data;
+
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.Volley;
+import com.google.firebase.messaging.FirebaseMessaging;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.concurrent.TimeUnit;
 
 public class Main extends AppCompatActivity
 {
+	String TAG = "Main";
+
 	Context context;
 	Window window;
 	WebView web;
@@ -124,6 +134,8 @@ public class Main extends AppCompatActivity
 		web.getSettings().setMediaPlaybackRequiresUserGesture(false);
 
 		web.loadUrl("https://production-frontend-fisify.herokuapp.com/");
+		// TODO: delete this
+		// web.loadUrl("https://staging-frontend-fisify.herokuapp.com");
 	}
 
 	private void acceptBeforeUnloadAlertsAutomatically()
@@ -174,6 +186,84 @@ public class Main extends AppCompatActivity
 	private void listenForNotificationRequestsFromJavascript()
 	{
 		web.addJavascriptInterface(this, "Android");
+	}
+
+	// https://nabeelj.medium.com/making-a-simple-get-and-post-request-using-volley-beginners-guide-ee608f10c0a9
+	@JavascriptInterface
+	public void sendDeviceAndroid(String uid)
+	{
+		FirebaseMessaging.getInstance().getToken()
+				.addOnCompleteListener(task -> {
+					if (!task.isSuccessful()) {
+						Log.w(TAG, "Fetching FCM registration token failed", task.getException());
+						return;
+					}
+					// Get new FCM registration token
+					String token = task.getResult();
+
+					/*
+					Toast.makeText(Main.this, token, Toast.LENGTH_SHORT).show();
+					if (uid != null) {
+						Toast.makeText(Main.this, uid, Toast.LENGTH_SHORT).show();
+					} */
+
+					RequestQueue queue = Volley.newRequestQueue(Main.this);
+					String url = "https://staging-backend-fisify.herokuapp.com/api/devices";
+
+					JSONObject jsonBody = new JSONObject();
+					try {
+						jsonBody.put("firebaseUID", uid);
+						jsonBody.put("token", token);
+						jsonBody.put("platform", "android");
+					} catch (JSONException e) {
+						e.printStackTrace();
+					}
+
+					JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(
+							Request.Method.POST,
+							url,
+							jsonBody,
+							response -> Log.d(TAG, response.toString()),
+							error -> Log.e(TAG, "Known error because backend returns an empty JSON response.")
+					);
+
+					// Add the request to the RequestQueue.
+					queue.add(jsonObjectRequest);
+
+					/* Long version without errors
+
+					final String requestBody = jsonBody.toString();
+
+					StringRequest stringRequest = new StringRequest(
+							Request.Method.POST,
+							url,
+							response -> Log.i("LOG_RESPONSE", response),
+							error -> Log.e("LOG_RESPONSE", error.toString())
+					) {
+						@Override
+						public String getBodyContentType() {
+							return "application/json; charset=utf-8";
+						}
+
+						@Override
+						public byte[] getBody() throws AuthFailureError {
+							try {
+								return requestBody == null ? null : requestBody.getBytes("utf-8");
+							} catch (UnsupportedEncodingException uee) {
+								return null;
+							}
+						}
+
+						@Override
+						protected Response<String> parseNetworkResponse(NetworkResponse response) {
+							String responseString = "";
+							if (response != null) {
+								responseString = String.valueOf(response.statusCode);
+							}
+							return Response.success(responseString, HttpHeaderParser.parseCacheHeaders(response));
+						}
+					}; */
+				});
 	}
 
 	@JavascriptInterface
