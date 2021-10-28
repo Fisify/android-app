@@ -50,8 +50,8 @@ public class Main extends AppCompatActivity
 		acceptBeforeUnloadAlertsAutomatically();
 		showWebViewWhenLoaded();
 
-		registerNotificationChannelForAndroidVersion26plus();
-		listenForNotificationRequestsFromJavascript();
+		//registerNotificationChannelForAndroidVersion26plus();
+		//listenForNotificationRequestsFromJavascript();
 	}
 
 	@Override
@@ -66,30 +66,6 @@ public class Main extends AppCompatActivity
 	{
 		super.onPause();
 		web.evaluateJavascript("window.sendBeacon()",null);
-	}
-
-	@Override
-	protected void onUserLeaveHint()
-	{
-		super.onUserLeaveHint();
-	}
-
-	@Override
-	protected void onStop()
-	{
-		KeyguardManager myKM = (KeyguardManager) context.getSystemService(Context.KEYGUARD_SERVICE);
-		if( myKM.inKeyguardRestrictedInputMode()) {
-			Log.d("Locked","l");
-		} else {
-			super.finishAndRemoveTask();
-		}
-		super.onStop();
-	}
-
-	@Override
-	protected void onDestroy()
-	{
-		super.onDestroy();
 	}
 
 	@Override
