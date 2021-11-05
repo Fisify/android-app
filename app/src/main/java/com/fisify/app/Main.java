@@ -1,7 +1,6 @@
 package com.fisify.app;
 
 import android.app.Activity;
-import android.app.KeyguardManager;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.Context;
@@ -61,7 +60,7 @@ public class Main extends AppCompatActivity
 		showWebViewWhenLoaded();
 
 		//registerNotificationChannelForAndroidVersion26plus();
-		//listenForNotificationRequestsFromJavascript();
+		listenForNotificationRequestsFromJavascript();
 	}
 
 	@Override
@@ -110,8 +109,6 @@ public class Main extends AppCompatActivity
 		web.getSettings().setMediaPlaybackRequiresUserGesture(false);
 
 		web.loadUrl("https://production-frontend-fisify.herokuapp.com/");
-		// TODO: delete this
-		// web.loadUrl("https://staging-frontend-fisify.herokuapp.com");
 	}
 
 	private void acceptBeforeUnloadAlertsAutomatically()
