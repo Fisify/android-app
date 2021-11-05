@@ -108,7 +108,7 @@ public class Main extends AppCompatActivity
 		web.getSettings().setDomStorageEnabled(true);
 		web.getSettings().setMediaPlaybackRequiresUserGesture(false);
 
-		web.loadUrl("https://production-frontend-fisify.herokuapp.com/");
+		web.loadUrl("https://app.fisify.com");
 	}
 
 	private void acceptBeforeUnloadAlertsAutomatically()
