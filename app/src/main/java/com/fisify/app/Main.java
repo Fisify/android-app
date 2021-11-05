@@ -174,14 +174,8 @@ public class Main extends AppCompatActivity
 					// Get new FCM registration token
 					String token = task.getResult();
 
-					/*
-					Toast.makeText(Main.this, token, Toast.LENGTH_SHORT).show();
-					if (uid != null) {
-						Toast.makeText(Main.this, uid, Toast.LENGTH_SHORT).show();
-					} */
-
 					RequestQueue queue = Volley.newRequestQueue(Main.this);
-					String url = "https://staging-backend-fisify.herokuapp.com/api/devices";
+					String URL = "https://production-backend-fisify.herokuapp.com/api/devices";
 
 					JSONObject jsonBody = new JSONObject();
 					try {
@@ -194,7 +188,7 @@ public class Main extends AppCompatActivity
 
 					JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(
 							Request.Method.POST,
-							url,
+							URL,
 							jsonBody,
 							response -> Log.d(TAG, response.toString()),
 							error -> Log.e(TAG, "Known error because backend returns an empty JSON response.")
@@ -202,40 +196,6 @@ public class Main extends AppCompatActivity
 
 					// Add the request to the RequestQueue.
 					queue.add(jsonObjectRequest);
-
-					/* Long version without errors
-
-					final String requestBody = jsonBody.toString();
-
-					StringRequest stringRequest = new StringRequest(
-							Request.Method.POST,
-							url,
-							response -> Log.i("LOG_RESPONSE", response),
-							error -> Log.e("LOG_RESPONSE", error.toString())
-					) {
-						@Override
-						public String getBodyContentType() {
-							return "application/json; charset=utf-8";
-						}
-
-						@Override
-						public byte[] getBody() throws AuthFailureError {
-							try {
-								return requestBody == null ? null : requestBody.getBytes("utf-8");
-							} catch (UnsupportedEncodingException uee) {
-								return null;
-							}
-						}
-
-						@Override
-						protected Response<String> parseNetworkResponse(NetworkResponse response) {
-							String responseString = "";
-							if (response != null) {
-								responseString = String.valueOf(response.statusCode);
-							}
-							return Response.success(responseString, HttpHeaderParser.parseCacheHeaders(response));
-						}
-					}; */
 				});
 	}
 
