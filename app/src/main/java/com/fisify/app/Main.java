@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.os.Build;
 import android.os.Bundle;
@@ -28,6 +29,12 @@ import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
+import com.google.android.gms.auth.api.signin.GoogleSignInClient;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
+import com.google.android.gms.common.api.ApiException;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.messaging.FirebaseMessaging;
 
 import org.json.JSONException;
@@ -37,18 +44,23 @@ import java.util.concurrent.TimeUnit;
 
 public class Main extends AppCompatActivity
 {
-	String TAG = "Main";
+	private static final String TAG = "Main";
 
 	Context context;
 	Window window;
 	WebView web;
 
-	int SPLASHSCREEN_DELAY_AFTER_PAGE_LOADED = 2000;
+	private static final int SPLASHSCREEN_DELAY_AFTER_PAGE_LOADED = 2000;
+	private static final int RC_SIGN_IN = 9001;
+
+	private GoogleSignInClient mGoogleSignInClient;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
 	{
 		super.onCreate(savedInstanceState);
+
+		initializeFirebaseAuthentication();
 
 		context = getApplicationContext();
 		window = getWindow();
@@ -61,6 +73,45 @@ public class Main extends AppCompatActivity
 
 		//registerNotificationChannelForAndroidVersion26plus();
 		listenForNotificationRequestsFromJavascript();
+	}
+
+	protected void initializeFirebaseAuthentication() {
+		GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+				// find on google-service.json
+				.requestIdToken("811151055222-b233lsqtl1bs7lssdc8103apr8bl9de4.apps.googleusercontent.com")
+				.requestEmail()
+				.build();
+
+		mGoogleSignInClient = GoogleSignIn.getClient(this, gso);
+	}
+
+	@JavascriptInterface
+	public void showGoogleSignIn () {
+		Intent signInIntent = mGoogleSignInClient.getSignInIntent();
+		startActivityForResult(signInIntent, RC_SIGN_IN);
+	}
+
+	@Override
+	public void onActivityResult(int requestCode, int resultCode, Intent data) {
+		super.onActivityResult(requestCode, resultCode, data);
+
+		if (requestCode == RC_SIGN_IN) {
+			Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
+			try {
+				// Google Sign In was successful, authenticate with Firebase
+				GoogleSignInAccount account = task.getResult(ApiException.class);
+				String idToken = account.getIdToken();
+
+				String javascriptCode = String.format("window.handleSignInFromAndroid('%s')", idToken);
+				web.evaluateJavascript(javascriptCode,null);
+
+				// https://stackoverflow.com/questions/38707133/google-firebase-sign-out-and-forget-user-in-android-app
+				this.mGoogleSignInClient.signOut();
+			} catch (ApiException e) {
+				// Google Sign In failed, update UI appropriately
+				Log.w(TAG, "Google sign in failed", e);
+			}
+		}
 	}
 
 	@Override
@@ -108,7 +159,12 @@ public class Main extends AppCompatActivity
 		web.getSettings().setDomStorageEnabled(true);
 		web.getSettings().setMediaPlaybackRequiresUserGesture(false);
 
-		web.loadUrl("https://app.fisify.com");
+		// web.loadUrl("https://app.fisify.com");
+		web.loadUrl("https://staging-frontend-fisify.herokuapp.com/");
+
+		// FOR DEVELOPMENT
+		// https://stackoverflow.com/questions/52492970/android-webview-not-loading-for-localhost-server
+		// web.loadUrl("http://192.168.1.138:3001");
 	}
 
 	private void acceptBeforeUnloadAlertsAutomatically()
@@ -176,6 +232,7 @@ public class Main extends AppCompatActivity
 
 					RequestQueue queue = Volley.newRequestQueue(Main.this);
 					String URL = "https://production-backend-fisify.herokuapp.com/api/devices";
+					// String URL = "https://staging-backend-fisify.herokuapp.com/api/devices";
 
 					JSONObject jsonBody = new JSONObject();
 					try {
