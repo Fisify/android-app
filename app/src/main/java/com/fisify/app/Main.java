@@ -55,6 +55,17 @@ public class Main extends AppCompatActivity
 
 	private GoogleSignInClient mGoogleSignInClient;
 
+	private final String WEBVIEW_PRODUCTION_URL = "https://app.fisify.com";
+	private final String WEBVIEW_STAGING_URL = "https://staging-frontend-fisify.herokuapp.com";
+	private final String WEBVIEW_LOCAL_URL = "http://192.168.1.138:3001";
+
+	private final String NOTIFICATIONS_PRODUCTION_URL = "https://production-backend-fisify.herokuapp.com/api/devices";
+	private final String NOTIFICATION_STAGING_URL = "https://staging-backend-fisify.herokuapp.com/api/devices";
+
+	// find on google-service.json
+	private final String PRODUCTION_CLIENT_ID = "602430523502-vdpv1vadcrd1em4a8nbo19hp4cdovgjn.apps.googleusercontent.com";
+	private final String DEVELOPMENT_CLIENT_ID = "811151055222-b233lsqtl1bs7lssdc8103apr8bl9de4.apps.googleusercontent.com";
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
 	{
@@ -77,11 +88,9 @@ public class Main extends AppCompatActivity
 
 	protected void initializeFirebaseAuthentication() {
 		GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-				// find on google-service.json
-				.requestIdToken("811151055222-b233lsqtl1bs7lssdc8103apr8bl9de4.apps.googleusercontent.com")
+				.requestIdToken(PRODUCTION_CLIENT_ID)
 				.requestEmail()
 				.build();
-
 		mGoogleSignInClient = GoogleSignIn.getClient(this, gso);
 	}
 
@@ -102,7 +111,7 @@ public class Main extends AppCompatActivity
 				GoogleSignInAccount account = task.getResult(ApiException.class);
 				String idToken = account.getIdToken();
 
-				String javascriptCode = String.format("window.handleSignInFromAndroid('%s')", idToken);
+				String javascriptCode = String.format("window.handleGoogleSignInFromAndroid('%s')", idToken);
 				web.evaluateJavascript(javascriptCode,null);
 
 				// https://stackoverflow.com/questions/38707133/google-firebase-sign-out-and-forget-user-in-android-app
@@ -159,12 +168,7 @@ public class Main extends AppCompatActivity
 		web.getSettings().setDomStorageEnabled(true);
 		web.getSettings().setMediaPlaybackRequiresUserGesture(false);
 
-		// web.loadUrl("https://app.fisify.com");
-		web.loadUrl("https://staging-frontend-fisify.herokuapp.com/");
-
-		// FOR DEVELOPMENT
-		// https://stackoverflow.com/questions/52492970/android-webview-not-loading-for-localhost-server
-		// web.loadUrl("http://192.168.1.138:3001");
+		web.loadUrl(WEBVIEW_PRODUCTION_URL);
 	}
 
 	private void acceptBeforeUnloadAlertsAutomatically()
@@ -231,8 +235,6 @@ public class Main extends AppCompatActivity
 					String token = task.getResult();
 
 					RequestQueue queue = Volley.newRequestQueue(Main.this);
-					String URL = "https://production-backend-fisify.herokuapp.com/api/devices";
-					// String URL = "https://staging-backend-fisify.herokuapp.com/api/devices";
 
 					JSONObject jsonBody = new JSONObject();
 					try {
@@ -245,7 +247,7 @@ public class Main extends AppCompatActivity
 
 					JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(
 							Request.Method.POST,
-							URL,
+							NOTIFICATIONS_PRODUCTION_URL,
 							jsonBody,
 							response -> Log.d(TAG, response.toString()),
 							error -> Log.e(TAG, "Known error because backend returns an empty JSON response.")
