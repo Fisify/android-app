@@ -57,10 +57,10 @@ public class Main extends AppCompatActivity
 
 	private final String WEBVIEW_PRODUCTION_URL = "https://app.fisify.com";
 	private final String WEBVIEW_STAGING_URL = "https://staging-frontend-fisify.herokuapp.com";
-	private final String WEBVIEW_LOCAL_URL = "http://192.168.1.138:3001";
+	private final String WEBVIEW_LOCAL_URL = "http://192.168.2.195:3001";
 
 	private final String NOTIFICATIONS_PRODUCTION_URL = "https://production-backend-fisify.herokuapp.com/api/devices";
-	private final String NOTIFICATION_STAGING_URL = "https://staging-backend-fisify.herokuapp.com/api/devices";
+	private final String NOTIFICATIONS_STAGING_URL = "https://staging-backend-fisify.herokuapp.com/api/devices";
 
 	// find on google-service.json
 	private final String PRODUCTION_CLIENT_ID = "602430523502-vdpv1vadcrd1em4a8nbo19hp4cdovgjn.apps.googleusercontent.com";
