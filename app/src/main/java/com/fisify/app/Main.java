@@ -142,7 +142,7 @@ public class Main extends AppCompatActivity
 	{
 		web.evaluateJavascript("location.href", value ->
 		{
-			if (value.endsWith("/login\"") || value.endsWith("/home\""))
+			if (value.endsWith("/login\"") || value.endsWith("/home\"") || value.endsWith("/catalog\"") || value.endsWith("/education\"") || value.endsWith("/profile\""))
 			{
 				finish();
 			}
