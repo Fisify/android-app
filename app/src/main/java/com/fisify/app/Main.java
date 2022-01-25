@@ -25,6 +25,7 @@ import androidx.work.OneTimeWorkRequest;
 import androidx.work.WorkManager;
 import androidx.work.WorkRequest;
 
+import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.JsonObjectRequest;
@@ -252,6 +253,9 @@ public class Main extends AppCompatActivity
 							response -> Log.d(TAG, response.toString()),
 							error -> Log.e(TAG, "Known error because backend returns an empty JSON response.")
 					);
+
+					// https://stackoverflow.com/questions/27873001/android-volley-sending-data-twice
+					jsonObjectRequest.setRetryPolicy(new DefaultRetryPolicy(0, DefaultRetryPolicy.DEFAULT_MAX_RETRIES, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
 
 					// Add the request to the RequestQueue.
 					queue.add(jsonObjectRequest);
