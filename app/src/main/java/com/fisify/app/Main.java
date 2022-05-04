@@ -56,7 +56,7 @@ public class Main extends AppCompatActivity
 
 	private GoogleSignInClient mGoogleSignInClient;
 
-	private final String WEBVIEW_PRODUCTION_URL = "https://production-frontend-fisify.herokuapp.com";
+	private final String WEBVIEW_PRODUCTION_URL = "https://app.fisify.com";
 	private final String WEBVIEW_STAGING_URL = "https://staging-frontend-fisify.herokuapp.com";
 	private final String WEBVIEW_LOCAL_URL = "http://192.168.2.195:3001";
 
