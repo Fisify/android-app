@@ -1,11 +1,17 @@
 package com.fisify.app;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.media.RingtoneManager;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -20,10 +26,7 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.work.Data;
-import androidx.work.OneTimeWorkRequest;
-import androidx.work.WorkManager;
-import androidx.work.WorkRequest;
+import androidx.core.app.NotificationCompat;
 
 import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.Request;
@@ -41,7 +44,10 @@ import com.google.firebase.messaging.FirebaseMessaging;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.concurrent.TimeUnit;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 
 public class Main extends AppCompatActivity
 {
@@ -83,7 +89,6 @@ public class Main extends AppCompatActivity
 		acceptBeforeUnloadAlertsAutomatically();
 		showWebViewWhenLoaded();
 
-		//registerNotificationChannelForAndroidVersion26plus();
 		listenForNotificationRequestsFromJavascript();
 	}
 
@@ -125,42 +130,32 @@ public class Main extends AppCompatActivity
 	}
 
 	@Override
-	protected void onResume()
-	{
+	protected void onResume() {
 		super.onResume();
-		web.evaluateJavascript("window.initializeBeacon()",null);
 	}
 
 	@Override
-	protected void onPause()
-	{
+	protected void onPause() {
 		super.onPause();
-		web.evaluateJavascript("window.sendBeacon()",null);
 	}
 
 	@Override
-	public void onBackPressed()
-	{
-		web.evaluateJavascript("location.href", value ->
-		{
-			if (value.endsWith("/login\"") || value.endsWith("/home\"") || value.endsWith("/catalog\"") || value.endsWith("/education\"") || value.endsWith("/profile\""))
-			{
+	public void onBackPressed() {
+		web.evaluateJavascript("location.href", value -> {
+			if (value.endsWith("/login\"") || value.endsWith("/home\"") || value.endsWith("/catalog\"") || value.endsWith("/education\"") || value.endsWith("/profile\"")) {
 				finish();
-			}
-			else
-			{
+			} else {
 				web.evaluateJavascript("history.back()",null);
 			}
 		});
 	}
 
-	private void showSplashScreen()
-	{
+	private void showSplashScreen() {
 		setContentView(R.layout.splash);
 	}
 
-	private void startLoadingWebView()
-	{
+	@SuppressLint("SetJavaScriptEnabled")
+	private void startLoadingWebView() {
 		WebView.setWebContentsDebuggingEnabled(true);
 
 		web = new WebView(context);
@@ -172,8 +167,7 @@ public class Main extends AppCompatActivity
 		web.loadUrl(WEBVIEW_PRODUCTION_URL);
 	}
 
-	private void acceptBeforeUnloadAlertsAutomatically()
-	{
+	private void acceptBeforeUnloadAlertsAutomatically() {
 		WebChromeClient webChromeClient = new WebChromeClient() {
 			@Override
 			public boolean onJsBeforeUnload(WebView view, String url, String message, JsResult result) {
@@ -184,48 +178,30 @@ public class Main extends AppCompatActivity
 		web.setWebChromeClient(webChromeClient);
 	}
 
-	private void showWebViewWhenLoaded()
-	{
+	private void showWebViewWhenLoaded() {
 		Activity activity = this;
 
-		web.setWebViewClient(new WebViewClient()
-		{
+		web.setWebViewClient(new WebViewClient() {
 			@Override
-			public void onPageFinished(WebView view, String url)
-			{
+			public void onPageFinished(WebView view, String url) {
 				final Handler timer = new Handler(Looper.getMainLooper());
 
-				timer.postDelayed(() ->
-				{
+				timer.postDelayed(() -> {
 					activity.setContentView(web);
 					window.setNavigationBarColor(getResources().getColor(R.color.fisifyBackground));
 					window.setStatusBarColor(getResources().getColor(R.color.fisifyBackground));
-					web.evaluateJavascript("window.initializeBeacon()",null);
 				}, SPLASHSCREEN_DELAY_AFTER_PAGE_LOADED);
 			}
 		});
 	}
 
-	private void registerNotificationChannelForAndroidVersion26plus()
-	{
-		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
-		{
-			NotificationChannel channel = new NotificationChannel("FISIFY_CHANNEL_ID", "FISIFY_CHANNEL", NotificationManager.IMPORTANCE_HIGH);
-			channel.setDescription("FISIFY_NOTIFICATIONS");
-
-			getSystemService(NotificationManager.class).createNotificationChannel(channel);
-		}
-	}
-
-	private void listenForNotificationRequestsFromJavascript()
-	{
+	private void listenForNotificationRequestsFromJavascript() {
 		web.addJavascriptInterface(this, "Android");
 	}
 
 	// https://nabeelj.medium.com/making-a-simple-get-and-post-request-using-volley-beginners-guide-ee608f10c0a9
 	@JavascriptInterface
-	public void sendDeviceAndroid(String uid)
-	{
+	public void sendDeviceAndroid(String uid) {
 		FirebaseMessaging.getInstance().getToken()
 				.addOnCompleteListener(task -> {
 					if (!task.isSuccessful()) {
@@ -263,46 +239,83 @@ public class Main extends AppCompatActivity
 	}
 
 	@JavascriptInterface
-	public void showNotificationAfterSeconds(int seconds, String text)
-	{
-		Data data = new Data.Builder().putString("notificationText", text).build();
-		WorkRequest requestNotification = new OneTimeWorkRequest.Builder(NotificationWorker.class).setInputData(data).setInitialDelay(seconds, TimeUnit.SECONDS).addTag("notification").build();
-		WorkManager.getInstance(context).enqueue(requestNotification);
-	}
-
-	@JavascriptInterface
-	public void cancelAllNotifications()
-	{
-		WorkManager.getInstance(context).cancelAllWorkByTag("notification");
-	}
-
-	@JavascriptInterface
-	public void fullScreen()
-	{
-		runOnUiThread(() ->
-		{
+	public void fullScreen() {
+		runOnUiThread(() -> {
 			getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_IMMERSIVE);
 		});
 	}
 
 	@JavascriptInterface
-	public void normalScreen()
-	{
-		runOnUiThread(() ->
-		{
+	public void normalScreen() {
+		runOnUiThread(() -> {
 			getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_VISIBLE);
 		});
 	}
 
 	@JavascriptInterface
-	public void landscape()
-	{
+	public void landscape() {
 		setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
 	}
 
 	@JavascriptInterface
-	public void portrait()
-	{
+	public void portrait() {
 		setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 	}
+
+
+
+
+	// JUST FOR TESTING PURPOSES
+	// These methods are implemented in MyFirebaseMessagingService.java.
+	@JavascriptInterface
+	public void sendNotification(String title, String body, String image) {
+		Intent intent = new Intent(this, Main.class);
+		intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+		PendingIntent pendingIntent = PendingIntent.getActivity(this, 0 /* Request code */, intent,
+				PendingIntent.FLAG_ONE_SHOT);
+
+		Bitmap bitmap = getBitmapFromURL(image);
+
+		String channelId = getString(R.string.default_notification_channel_id);
+		Uri defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+		NotificationCompat.Builder notificationBuilder =
+				new NotificationCompat.Builder(this, channelId)
+						.setSmallIcon(R.drawable.notifications_logo)
+						.setContentTitle(title)
+						.setContentText(body)
+						.setAutoCancel(true)
+						.setLargeIcon(bitmap)
+						.setSound(defaultSoundUri)
+						.setContentIntent(pendingIntent);
+
+		NotificationManager notificationManager =
+				(NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+
+		// Since android Oreo notification channel is needed.
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+			NotificationChannel channel = new NotificationChannel(channelId,
+					"Channel human readable title",
+					NotificationManager.IMPORTANCE_DEFAULT);
+			notificationManager.createNotificationChannel(channel);
+		}
+
+		notificationManager.notify(0 /* ID of notification */, notificationBuilder.build());
+	}
+
+	// https://stackoverflow.com/questions/42900826/how-can-i-show-an-image-from-link-in-android-push-notification
+	public Bitmap getBitmapFromURL(String strURL) {
+		try {
+			URL url = new URL(strURL);
+			HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+			connection.setDoInput(true);
+			connection.connect();
+			InputStream input = connection.getInputStream();
+			Bitmap myBitmap = BitmapFactory.decodeStream(input);
+			return myBitmap;
+		} catch (IOException e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+
 }
