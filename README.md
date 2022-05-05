@@ -11,3 +11,4 @@ The password for signing the App bundle is android15 for both questions, the key
 
 ## Get SHA-1 key for Firebase
 - https://stackoverflow.com/questions/15727912/sha-1-fingerprint-of-keystore-certificate
+- https://stackoverflow.com/questions/27609442/how-to-get-the-sha-1-fingerprint-certificate-in-android-studio-for-debug-mode
