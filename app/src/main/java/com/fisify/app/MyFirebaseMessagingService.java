@@ -95,7 +95,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                         .setLargeIcon(bitmap)
                         .setSound(defaultSoundUri)
                         .setContentIntent(pendingIntent)
-                        .addAction(R.drawable.notifications_logo, "¡Vamos!", pendingIntent);
+                        .addAction(R.drawable.notifications_logo, "¡Entra ahora!", pendingIntent);
 
         NotificationManager notificationManager =
                 (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
