@@ -210,13 +210,15 @@ public class Main extends AppCompatActivity
 					}
 					// Get new FCM registration token
 					String token = task.getResult();
-
+					Locale defaultLocale = Locale.getDefault();
+					String locale = defaultLocale.getLanguage().substring(0, 2);
 					RequestQueue queue = Volley.newRequestQueue(Main.this);
 
 					JSONObject jsonBody = new JSONObject();
 					try {
 						jsonBody.put("firebaseUID", uid);
 						jsonBody.put("token", token);
+						jsonBody.put("lang", locale);
 						jsonBody.put("platform", "android");
 					} catch (JSONException e) {
 						e.printStackTrace();
