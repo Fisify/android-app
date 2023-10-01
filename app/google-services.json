@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "811151055222",
+    "project_id": "fisify-auth-development",
+    "storage_bucket": "fisify-auth-development.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:811151055222:android:519375a0ec5f0124e84257",
+        "android_client_info": {
+          "package_name": "com.fisify.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "811151055222-b233lsqtl1bs7lssdc8103apr8bl9de4.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBvOwQfre8AaKJXO3yly6T_JAsmpUno9Xw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "811151055222-b233lsqtl1bs7lssdc8103apr8bl9de4.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
