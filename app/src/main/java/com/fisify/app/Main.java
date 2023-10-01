@@ -1,5 +1,6 @@
 package com.fisify.app;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.NotificationChannel;
@@ -8,6 +9,7 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.media.RingtoneManager;
@@ -21,12 +23,15 @@ import android.view.View;
 import android.view.Window;
 import android.webkit.JavascriptInterface;
 import android.webkit.JsResult;
+import android.webkit.PermissionRequest;
 import android.webkit.WebChromeClient;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
+import androidx.core.content.ContextCompat;
 
 import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.Request;
@@ -48,6 +53,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.Locale;
 
 public class Main extends AppCompatActivity
 {
@@ -84,6 +90,12 @@ public class Main extends AppCompatActivity
 		window = getWindow();
 
 		showSplashScreen();
+
+		int MY_PERMISSIONS_REQUEST_CAMERA = 0;
+
+		if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED || ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+			ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA}, MY_PERMISSIONS_REQUEST_CAMERA);
+		}
 
 		startLoadingWebView();
 		acceptBeforeUnloadAlertsAutomatically();
@@ -162,6 +174,8 @@ public class Main extends AppCompatActivity
 
 		web.getSettings().setJavaScriptEnabled(true);
 		web.getSettings().setDomStorageEnabled(true);
+		web.getSettings().setAllowContentAccess(true);
+		web.getSettings().setAllowFileAccess(true);
 		web.getSettings().setMediaPlaybackRequiresUserGesture(false);
 
 		web.loadUrl(WEBVIEW_PRODUCTION_URL);
@@ -169,6 +183,18 @@ public class Main extends AppCompatActivity
 
 	private void acceptBeforeUnloadAlertsAutomatically() {
 		WebChromeClient webChromeClient = new WebChromeClient() {
+			@Override
+			public void onPermissionRequest(PermissionRequest request) {
+				runOnUiThread(() -> {
+					if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+						String[] PERMISSIONS = {
+								PermissionRequest.RESOURCE_AUDIO_CAPTURE,
+								PermissionRequest.RESOURCE_VIDEO_CAPTURE,
+						};
+						request.grant(PERMISSIONS);
+					}
+				});
+			}
 			@Override
 			public boolean onJsBeforeUnload(WebView view, String url, String message, JsResult result) {
 				result.confirm();
@@ -262,47 +288,6 @@ public class Main extends AppCompatActivity
 	@JavascriptInterface
 	public void portrait() {
 		setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-	}
-
-
-
-
-	// JUST FOR TESTING PURPOSES
-	// These methods are implemented in MyFirebaseMessagingService.java.
-	@JavascriptInterface
-	public void sendNotification(String title, String body, String image) {
-		Intent intent = new Intent(this, Main.class);
-		intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-		PendingIntent pendingIntent = PendingIntent.getActivity(this, 0 /* Request code */, intent,
-				PendingIntent.FLAG_ONE_SHOT);
-
-		Bitmap bitmap = getBitmapFromURL(image);
-
-		String channelId = getString(R.string.default_notification_channel_id);
-		Uri defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
-		NotificationCompat.Builder notificationBuilder =
-				new NotificationCompat.Builder(this, channelId)
-						.setSmallIcon(R.drawable.notifications_logo)
-						.setContentTitle(title)
-						.setContentText(body)
-						.setAutoCancel(true)
-						.setLargeIcon(bitmap)
-						.setSound(defaultSoundUri)
-						.setContentIntent(pendingIntent)
-						.addAction(R.drawable.notifications_logo, "¡Entra ahora!", pendingIntent);;
-
-		NotificationManager notificationManager =
-				(NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-
-		// Since android Oreo notification channel is needed.
-		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-			NotificationChannel channel = new NotificationChannel(channelId,
-					"Channel human readable title",
-					NotificationManager.IMPORTANCE_DEFAULT);
-			notificationManager.createNotificationChannel(channel);
-		}
-
-		notificationManager.notify(0 /* ID of notification */, notificationBuilder.build());
 	}
 
 	// https://stackoverflow.com/questions/42900826/how-can-i-show-an-image-from-link-in-android-push-notification
