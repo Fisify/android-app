@@ -178,7 +178,13 @@ public class Main extends AppCompatActivity
 		web.getSettings().setAllowFileAccess(true);
 		web.getSettings().setMediaPlaybackRequiresUserGesture(false);
 
-		web.loadUrl(WEBVIEW_PRODUCTION_URL);
+		final long systemMillis = System.currentTimeMillis() / 1000;
+		final String timestamp = Long.toString(systemMillis);
+		final String webviewUrl = WEBVIEW_PRODUCTION_URL + "?timestamp=" + timestamp;
+
+		Log.d(TAG, webviewUrl);
+
+		web.loadUrl(webviewUrl);
 	}
 
 	private void acceptBeforeUnloadAlertsAutomatically() {
