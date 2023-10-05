@@ -213,9 +213,10 @@ public class Main extends AppCompatActivity
 
 			@Override
 			public void onError(VolleyError error) {
+				final String webviewUrl = WEBVIEW_STAGING_URL + "?timestamp=" + timestamp;
 				Log.e(TAG, error.toString());
-				Log.d(TAG, WEBVIEW_STAGING_URL);
-				web.loadUrl(WEBVIEW_STAGING_URL);
+				Log.d(TAG, webviewUrl);
+				web.loadUrl(webviewUrl);
 			}
 		});
 	}
