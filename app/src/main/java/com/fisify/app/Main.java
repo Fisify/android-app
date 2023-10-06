@@ -173,7 +173,7 @@ public class Main extends AppCompatActivity
 	private void getVersion(final IVersionCallback callback) {
 		final RequestQueue queue = Volley.newRequestQueue(Main.this);
 
-		final JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, VERSION_STAGING_URL, null,
+		final JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, VERSION_PRODUCTION_URL, null,
 				response -> {
 					try {
 						String version = response.getString("version");
@@ -206,14 +206,14 @@ public class Main extends AppCompatActivity
 		getVersion(new IVersionCallback() {
 			@Override
 			public void onSuccess(String version) {
-				final String webviewUrl = WEBVIEW_STAGING_URL + "?version=" + version;
+				final String webviewUrl = WEBVIEW_PRODUCTION_URL + "?version=" + version;
 				Log.d(TAG, webviewUrl);
 				web.loadUrl(webviewUrl);
 			}
 
 			@Override
 			public void onError(VolleyError error) {
-				final String webviewUrl = WEBVIEW_STAGING_URL + "?timestamp=" + timestamp;
+				final String webviewUrl = WEBVIEW_PRODUCTION_URL + "?timestamp=" + timestamp;
 				Log.e(TAG, error.toString());
 				Log.d(TAG, webviewUrl);
 				web.loadUrl(webviewUrl);
