@@ -3,21 +3,18 @@ package com.fisify.app;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
-import android.app.NotificationChannel;
-import android.app.NotificationManager;
-import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.media.RingtoneManager;
-import android.net.Uri;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
 import android.util.Log;
 import android.view.View;
 import android.view.Window;
@@ -29,14 +26,13 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.app.AppCompatDelegate;
 import androidx.core.app.ActivityCompat;
-import androidx.core.app.NotificationCompat;
 import androidx.core.content.ContextCompat;
 
 import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
-import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
@@ -58,13 +54,16 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Locale;
 
-public class Main extends AppCompatActivity
+public class Main extends AppCompatActivity implements SensorEventListener
 {
 	private static final String TAG = "Main";
 
 	Context context;
 	Window window;
 	WebView web;
+	private SensorManager sensorManager;
+	private float[] gravity;
+	private float[] geomagnetic;
 
 	private static final int SPLASHSCREEN_DELAY_AFTER_PAGE_LOADED = 2000;
 	private static final int RC_SIGN_IN = 9001;
@@ -72,21 +71,30 @@ public class Main extends AppCompatActivity
 	private GoogleSignInClient mGoogleSignInClient;
 
 	private final String WEBVIEW_PRODUCTION_URL = "https://app.fisify.com";
-	private final String WEBVIEW_STAGING_URL = "https://staging-frontend-fisify.herokuapp.com";
+	private final String WEBVIEW_STAGING_URL = "https://frontend-git-feature-fis-867login-providers-fisify.vercel.app/";
 	private final String WEBVIEW_LOCAL_URL = "http://192.168.2.195:3001";
+	private final String WEBVIEW_URL = WEBVIEW_STAGING_URL;
+
 	private final String VERSION_STAGING_URL = "https://staging-backend-fisify.herokuapp.com/app/version";
 	private final String VERSION_PRODUCTION_URL = "https://production-backend-fisify.herokuapp.com/app/version";
+	private final String VERSION_URL = VERSION_STAGING_URL;
+
 	private final String NOTIFICATIONS_PRODUCTION_URL = "https://production-backend-fisify.herokuapp.com/api/devices";
 	private final String NOTIFICATIONS_STAGING_URL = "https://staging-backend-fisify.herokuapp.com/api/devices";
+	private final String NOTIFICATIONS_URL = NOTIFICATIONS_STAGING_URL;
 
 	// find on google-service.json
 	private final String PRODUCTION_CLIENT_ID = "602430523502-vdpv1vadcrd1em4a8nbo19hp4cdovgjn.apps.googleusercontent.com";
 	private final String DEVELOPMENT_CLIENT_ID = "811151055222-b233lsqtl1bs7lssdc8103apr8bl9de4.apps.googleusercontent.com";
+	private final String CLIENT_ID = DEVELOPMENT_CLIENT_ID;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
 	{
 		super.onCreate(savedInstanceState);
+
+		// Force to use Light Mode always
+		AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
 
 		initializeFirebaseAuthentication();
 
@@ -106,11 +114,69 @@ public class Main extends AppCompatActivity
 		showWebViewWhenLoaded();
 
 		listenForNotificationRequestsFromJavascript();
+
+		sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
+		Sensor accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+		Sensor magnetometer = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
+		if (accelerometer != null) {
+			sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_UI);
+		}
+		if (magnetometer != null) {
+			sensorManager.registerListener(this, magnetometer, SensorManager.SENSOR_DELAY_UI);
+		}
+	}
+
+	private String lastOrientation = "portrait";
+
+	@Override
+	public void onSensorChanged(SensorEvent event) {
+		if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
+			gravity = event.values;
+		} else if (event.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD) {
+			geomagnetic = event.values;
+		}
+
+		if (gravity != null && geomagnetic != null) {
+			float[] R = new float[9];
+			float[] I = new float[9];
+			if (SensorManager.getRotationMatrix(R, I, gravity, geomagnetic)) {
+				float[] orientation = new float[3];
+				SensorManager.getOrientation(R, orientation);
+				float pitch = orientation[1]; // Inclinación hacia adelante/atrás
+
+				String newOrientation;
+				if (Math.abs(pitch) < Math.PI / 4) {
+					newOrientation = "landscape";
+				} else {
+					newOrientation = "portrait";
+				}
+
+				if (!newOrientation.equals(lastOrientation)) {
+					lastOrientation = newOrientation;
+
+					// Envía el mensaje al WebView
+					if (web != null) {
+						web.evaluateJavascript("window.onOrientationChange && window.onOrientationChange('" + newOrientation + "')", null);
+					}
+				}
+			}
+		}
+	}
+
+	@Override
+	public void onAccuracyChanged(Sensor sensor, int accuracy) {
+		// No actions needed
+	}
+
+	@Override
+	protected void onDestroy() {
+		super.onDestroy();
+		sensorManager.unregisterListener(this);
 	}
 
 	protected void initializeFirebaseAuthentication() {
 		GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-				.requestIdToken(PRODUCTION_CLIENT_ID)
+				.requestIdToken(CLIENT_ID)
 				.requestEmail()
 				.build();
 		mGoogleSignInClient = GoogleSignIn.getClient(this, gso);
@@ -173,7 +239,7 @@ public class Main extends AppCompatActivity
 	private void getVersion(final IVersionCallback callback) {
 		final RequestQueue queue = Volley.newRequestQueue(Main.this);
 
-		final JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, VERSION_PRODUCTION_URL, null,
+		final JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, VERSION_URL, null,
 				response -> {
 					try {
 						String version = response.getString("version");
@@ -206,14 +272,14 @@ public class Main extends AppCompatActivity
 		getVersion(new IVersionCallback() {
 			@Override
 			public void onSuccess(String version) {
-				final String webviewUrl = WEBVIEW_PRODUCTION_URL + "?version=" + version;
+				final String webviewUrl = WEBVIEW_URL + "?version=" + version;
 				Log.d(TAG, webviewUrl);
 				web.loadUrl(webviewUrl);
 			}
 
 			@Override
 			public void onError(VolleyError error) {
-				final String webviewUrl = WEBVIEW_PRODUCTION_URL + "?timestamp=" + timestamp;
+				final String webviewUrl = WEBVIEW_URL + "?timestamp=" + timestamp;
 				Log.e(TAG, error.toString());
 				Log.d(TAG, webviewUrl);
 				web.loadUrl(webviewUrl);
@@ -250,13 +316,9 @@ public class Main extends AppCompatActivity
 		web.setWebViewClient(new WebViewClient() {
 			@Override
 			public void onPageFinished(WebView view, String url) {
-				final Handler timer = new Handler(Looper.getMainLooper());
-
-				timer.postDelayed(() -> {
-					activity.setContentView(web);
-					window.setNavigationBarColor(getResources().getColor(R.color.fisifyBackground));
-					window.setStatusBarColor(getResources().getColor(R.color.fisifyBackground));
-				}, SPLASHSCREEN_DELAY_AFTER_PAGE_LOADED);
+				setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT); // Bloquear de nuevo en portrait
+				getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_VISIBLE);
+				activity.setContentView(web);
 			}
 		});
 	}
@@ -292,7 +354,7 @@ public class Main extends AppCompatActivity
 
 					JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(
 							Request.Method.POST,
-							NOTIFICATIONS_PRODUCTION_URL,
+							NOTIFICATIONS_URL,
 							jsonBody,
 							response -> Log.d(TAG, response.toString()),
 							error -> Log.e(TAG, "Known error because backend returns an empty JSON response.")
@@ -306,21 +368,30 @@ public class Main extends AppCompatActivity
 				});
 	}
 
+	/**
+	 * This functions leaves the orientation control to the web application
+	 */
 	@JavascriptInterface
 	public void fullScreen() {
 		runOnUiThread(() -> {
-			getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_IMMERSIVE);
+			setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED); // Permitir cambios temporales
+			getWindow().getDecorView().setSystemUiVisibility(
+					View.SYSTEM_UI_FLAG_HIDE_NAVIGATION |
+							View.SYSTEM_UI_FLAG_FULLSCREEN |
+							View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+			);
 		});
 	}
 
 	@JavascriptInterface
 	public void normalScreen() {
 		runOnUiThread(() -> {
+			setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT); // Bloquear de nuevo en portrait
 			getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_VISIBLE);
 		});
 	}
 
-	@JavascriptInterface
+	/*@JavascriptInterface
 	public void landscape() {
 		setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
 	}
@@ -328,7 +399,7 @@ public class Main extends AppCompatActivity
 	@JavascriptInterface
 	public void portrait() {
 		setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-	}
+	}*/
 
 	// https://stackoverflow.com/questions/42900826/how-can-i-show-an-image-from-link-in-android-push-notification
 	public Bitmap getBitmapFromURL(String strURL) {

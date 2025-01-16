@@ -1,66 +1,50 @@
 {
   "project_info": {
-    "project_number": "602430523502",
-    "project_id": "fisify-auth-production",
-    "storage_bucket": "fisify-auth-production.appspot.com"
+    "project_number": "811151055222",
+    "project_id": "fisify-auth-development",
+    "storage_bucket": "fisify-auth-development.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:602430523502:android:1160a0aa32dda3d5aabe7f",
+        "mobilesdk_app_id": "1:811151055222:android:519375a0ec5f0124e84257",
         "android_client_info": {
           "package_name": "com.fisify.app"
         }
       },
       "oauth_client": [
         {
-          "client_id": "602430523502-jg5n8negrcur4j01v0egeupaaprmq36n.apps.googleusercontent.com",
+          "client_id": "811151055222-4dpa14r1i78n385b623ccb19o536i0bd.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.fisify.app",
-            "certificate_hash": "b9a14c25103f2d088329c061b1932fdd2fe658c3"
+            "certificate_hash": "1f44c6cb02972509cf928365589934d278ee9576"
           }
         },
         {
-          "client_id": "602430523502-m4ce56cie3pqj8o8l7ag1o76iocqahrj.apps.googleusercontent.com",
+          "client_id": "811151055222-b3mo8c7pejktogjifpq5mnpsj0vsjh95.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.fisify.app",
-            "certificate_hash": "7b0d8c7151abe2c10f69440e15e3dcab7a4fb2ea"
+            "certificate_hash": "8717969c5260c36f7929db684c8e45aa506a3fee"
           }
         },
         {
-          "client_id": "602430523502-u5fh49fe4rccuo8lj71e356o5ksj2pdq.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.fisify.app",
-            "certificate_hash": "ff09f8cc487f9525e6007a461eb247d9ebcc798f"
-          }
-        },
-        {
-          "client_id": "602430523502-vdpv1vadcrd1em4a8nbo19hp4cdovgjn.apps.googleusercontent.com",
+          "client_id": "811151055222-b233lsqtl1bs7lssdc8103apr8bl9de4.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyAsR05n3qzdP9GvjrjtNHC-wsxr3TilvCU"
+          "current_key": "AIzaSyBvOwQfre8AaKJXO3yly6T_JAsmpUno9Xw"
         }
       ],
       "services": {
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "602430523502-2bee6gv8pngdnbeecd3r9eilkuj111i8.apps.googleusercontent.com",
+              "client_id": "811151055222-b233lsqtl1bs7lssdc8103apr8bl9de4.apps.googleusercontent.com",
               "client_type": 3
-            },
-            {
-              "client_id": "602430523502-buvnvb1rr9r2ipcldt58114jibajiig7.apps.googleusercontent.com",
-              "client_type": 2,
-              "ios_info": {
-                "bundle_id": "com.fisify.iosApp",
-                "app_store_id": "1611368222"
-              }
             }
           ]
         }
