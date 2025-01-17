@@ -65,7 +65,6 @@ public class Main extends AppCompatActivity implements SensorEventListener
 	private float[] gravity;
 	private float[] geomagnetic;
 
-	private static final int SPLASHSCREEN_DELAY_AFTER_PAGE_LOADED = 2000;
 	private static final int RC_SIGN_IN = 9001;
 
 	private GoogleSignInClient mGoogleSignInClient;
@@ -142,10 +141,10 @@ public class Main extends AppCompatActivity implements SensorEventListener
 			if (SensorManager.getRotationMatrix(R, I, gravity, geomagnetic)) {
 				float[] orientation = new float[3];
 				SensorManager.getOrientation(R, orientation);
-				float pitch = orientation[1]; // Inclinación hacia adelante/atrás
+				float roll = orientation[2];
 
 				String newOrientation;
-				if (Math.abs(pitch) < Math.PI / 4) {
+				if (Math.abs(roll) > Math.PI / 4 && Math.abs(roll) < 3 * Math.PI / 4) {
 					newOrientation = "landscape";
 				} else {
 					newOrientation = "portrait";
@@ -224,7 +223,16 @@ public class Main extends AppCompatActivity implements SensorEventListener
 	@Override
 	public void onBackPressed() {
 		web.evaluateJavascript("location.href", value -> {
-			if (value.endsWith("/login\"") || value.endsWith("/home\"") || value.endsWith("/catalog\"") || value.endsWith("/education\"") || value.endsWith("/profile\"")) {
+			String[] paths = {"/login\"", "/home\"", "/wellness\"", "/education\"", "/habit\"", "/stats\""};
+
+			boolean shouldFinishApp = false;
+			for (String path : paths) {
+				if (value.contains(path)) {
+					shouldFinishApp = true;
+					break;
+				}
+			}
+			if (shouldFinishApp) {
 				finish();
 			} else {
 				web.evaluateJavascript("history.back()",null);
@@ -233,6 +241,11 @@ public class Main extends AppCompatActivity implements SensorEventListener
 	}
 
 	private void showSplashScreen() {
+		getWindow().getDecorView().setSystemUiVisibility(
+				View.SYSTEM_UI_FLAG_FULLSCREEN |
+						View.SYSTEM_UI_FLAG_HIDE_NAVIGATION |
+						View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+		);
 		setContentView(R.layout.splash);
 	}
 
@@ -317,7 +330,12 @@ public class Main extends AppCompatActivity implements SensorEventListener
 			@Override
 			public void onPageFinished(WebView view, String url) {
 				setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT); // Bloquear de nuevo en portrait
-				getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_VISIBLE);
+				// Configurar UI inmersiva y ocultar permanentemente el Status Bar
+				getWindow().getDecorView().setSystemUiVisibility(
+						View.SYSTEM_UI_FLAG_FULLSCREEN |
+								View.SYSTEM_UI_FLAG_HIDE_NAVIGATION |
+								View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+				);
 				activity.setContentView(web);
 			}
 		});
@@ -375,11 +393,6 @@ public class Main extends AppCompatActivity implements SensorEventListener
 	public void fullScreen() {
 		runOnUiThread(() -> {
 			setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED); // Permitir cambios temporales
-			getWindow().getDecorView().setSystemUiVisibility(
-					View.SYSTEM_UI_FLAG_HIDE_NAVIGATION |
-							View.SYSTEM_UI_FLAG_FULLSCREEN |
-							View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
-			);
 		});
 	}
 
@@ -387,7 +400,6 @@ public class Main extends AppCompatActivity implements SensorEventListener
 	public void normalScreen() {
 		runOnUiThread(() -> {
 			setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT); // Bloquear de nuevo en portrait
-			getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_VISIBLE);
 		});
 	}
 
