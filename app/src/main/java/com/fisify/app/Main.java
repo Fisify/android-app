@@ -9,10 +9,6 @@ import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.hardware.Sensor;
-import android.hardware.SensorEvent;
-import android.hardware.SensorEventListener;
-import android.hardware.SensorManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
@@ -54,24 +50,21 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Locale;
 
-public class Main extends AppCompatActivity implements SensorEventListener
+public class Main extends AppCompatActivity
 {
 	private static final String TAG = "Main";
 
 	Context context;
 	Window window;
 	WebView web;
-	private SensorManager sensorManager;
-	private float[] gravity;
-	private float[] geomagnetic;
 
 	private static final int RC_SIGN_IN = 9001;
 
 	private GoogleSignInClient mGoogleSignInClient;
 
 	private final String WEBVIEW_PRODUCTION_URL = "https://app.fisify.com";
-	private final String WEBVIEW_STAGING_URL = "https://frontend-git-feature-fis-867login-providers-fisify.vercel.app/";
-	private final String WEBVIEW_LOCAL_URL = "http://192.168.2.195:3001";
+	private final String WEBVIEW_STAGING_URL = "https://frontend-git-merge-nextjs-fisify.vercel.app";
+	private final String WEBVIEW_LOCAL_URL = "http://192.168.1.39:3002";
 	private final String WEBVIEW_URL = WEBVIEW_STAGING_URL;
 
 	private final String VERSION_STAGING_URL = "https://staging-backend-fisify.herokuapp.com/app/version";
@@ -113,64 +106,11 @@ public class Main extends AppCompatActivity implements SensorEventListener
 		showWebViewWhenLoaded();
 
 		listenForNotificationRequestsFromJavascript();
-
-		sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
-		Sensor accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-		Sensor magnetometer = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
-		if (accelerometer != null) {
-			sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_UI);
-		}
-		if (magnetometer != null) {
-			sensorManager.registerListener(this, magnetometer, SensorManager.SENSOR_DELAY_UI);
-		}
-	}
-
-	private String lastOrientation = "portrait";
-
-	@Override
-	public void onSensorChanged(SensorEvent event) {
-		if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
-			gravity = event.values;
-		} else if (event.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD) {
-			geomagnetic = event.values;
-		}
-
-		if (gravity != null && geomagnetic != null) {
-			float[] R = new float[9];
-			float[] I = new float[9];
-			if (SensorManager.getRotationMatrix(R, I, gravity, geomagnetic)) {
-				float[] orientation = new float[3];
-				SensorManager.getOrientation(R, orientation);
-				float roll = orientation[2];
-
-				String newOrientation;
-				if (Math.abs(roll) > Math.PI / 4 && Math.abs(roll) < 3 * Math.PI / 4) {
-					newOrientation = "landscape";
-				} else {
-					newOrientation = "portrait";
-				}
-
-				if (!newOrientation.equals(lastOrientation)) {
-					lastOrientation = newOrientation;
-
-					// Envía el mensaje al WebView
-					if (web != null) {
-						web.evaluateJavascript("window.onOrientationChange && window.onOrientationChange('" + newOrientation + "')", null);
-					}
-				}
-			}
-		}
-	}
-
-	@Override
-	public void onAccuracyChanged(Sensor sensor, int accuracy) {
-		// No actions needed
 	}
 
 	@Override
 	protected void onDestroy() {
 		super.onDestroy();
-		sensorManager.unregisterListener(this);
 	}
 
 	protected void initializeFirebaseAuthentication() {
@@ -392,7 +332,7 @@ public class Main extends AppCompatActivity implements SensorEventListener
 	@JavascriptInterface
 	public void fullScreen() {
 		runOnUiThread(() -> {
-			setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED); // Permitir cambios temporales
+			setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE); // Permitir cambios temporales
 		});
 	}
 
@@ -402,16 +342,6 @@ public class Main extends AppCompatActivity implements SensorEventListener
 			setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT); // Bloquear de nuevo en portrait
 		});
 	}
-
-	/*@JavascriptInterface
-	public void landscape() {
-		setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
-	}
-
-	@JavascriptInterface
-	public void portrait() {
-		setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-	}*/
 
 	// https://stackoverflow.com/questions/42900826/how-can-i-show-an-image-from-link-in-android-push-notification
 	public Bitmap getBitmapFromURL(String strURL) {
