@@ -1,0 +1,12 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <style name="Theme.Fisify.FullScreen" parent="Theme.MaterialComponents.Light.NoActionBar">
+        <item name="android:screenOrientation">portrait</item>
+        <item name="android:windowSoftInputMode">adjustResize</item>
+        <item name="android:windowLayoutInDisplayCutoutMode" tools:ignore="NewApi">shortEdges</item>
+        <item name="android:windowFullscreen">true</item>
+        <item name="android:windowIsTranslucent">false</item>
+        <item name="colorPrimaryDark">#ffffff</item>
+        <item name="android:navigationBarColor">#ffffff</item>
+        <item name="android:forceDarkAllowed" tools:ignore="NewApi">false</item>
+    </style>
+</resources>

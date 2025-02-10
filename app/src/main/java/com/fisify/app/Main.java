@@ -14,6 +14,9 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.view.Window;
+import android.view.WindowInsets;
+import android.view.WindowInsetsController;
+import android.view.WindowManager;
 import android.webkit.JavascriptInterface;
 import android.webkit.JsResult;
 import android.webkit.PermissionRequest;
@@ -64,7 +67,7 @@ public class Main extends AppCompatActivity
 
 	private final String WEBVIEW_PRODUCTION_URL = "https://app.fisify.com";
 	private final String WEBVIEW_STAGING_URL = "https://frontend-git-merge-nextjs-fisify.vercel.app";
-	private final String WEBVIEW_LOCAL_URL = "http://192.168.1.39:3002";
+	private final String WEBVIEW_LOCAL_URL = "https://c8c7-84-78-155-157.ngrok-free.app";
 	private final String WEBVIEW_URL = WEBVIEW_STAGING_URL;
 
 	private final String VERSION_STAGING_URL = "https://staging-backend-fisify.herokuapp.com/app/version";
@@ -101,6 +104,7 @@ public class Main extends AppCompatActivity
 			ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA}, MY_PERMISSIONS_REQUEST_CAMERA);
 		}
 
+		hideSystemUI();
 		startLoadingWebView();
 		acceptBeforeUnloadAlertsAutomatically();
 		showWebViewWhenLoaded();
@@ -119,6 +123,33 @@ public class Main extends AppCompatActivity
 				.requestEmail()
 				.build();
 		mGoogleSignInClient = GoogleSignIn.getClient(this, gso);
+	}
+
+	@SuppressLint("NewApi") // o @SuppressLint("deprecation") según tu preferencia
+	private void hideSystemUI() {
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+			// Para Android 11 (API 30) en adelante
+			WindowInsetsController insetsController = getWindow().getInsetsController();
+			if (insetsController != null) {
+				insetsController.hide(WindowInsets.Type.statusBars() | WindowInsets.Type.navigationBars());
+			}
+			getWindow().setDecorFitsSystemWindows(false);
+		} else {
+			// Para versiones anteriores
+			getWindow().getDecorView().setSystemUiVisibility(
+					View.SYSTEM_UI_FLAG_FULLSCREEN
+							| View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+							| View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+							| View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+			);
+		}
+
+		// Dibujar detrás del notch (API 28+)
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+			WindowManager.LayoutParams lp = getWindow().getAttributes();
+			lp.layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES;
+			getWindow().setAttributes(lp);
+		}
 	}
 
 	@JavascriptInterface
@@ -259,6 +290,11 @@ public class Main extends AppCompatActivity
 				result.confirm();
 				return super.onJsBeforeUnload(view, url, message, result);
 			}
+
+			@Override
+			public Bitmap getDefaultVideoPoster() {
+				return Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888);
+			}
 		};
 		web.setWebChromeClient(webChromeClient);
 	}
@@ -277,6 +313,7 @@ public class Main extends AppCompatActivity
 								View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
 				);
 				activity.setContentView(web);
+				AndroidBug5497Workaround.assistActivity(activity);
 			}
 		});
 	}
@@ -341,6 +378,16 @@ public class Main extends AppCompatActivity
 		runOnUiThread(() -> {
 			setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT); // Bloquear de nuevo en portrait
 		});
+	}
+
+	@JavascriptInterface
+	public void landscape() {
+		setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+	}
+
+	@JavascriptInterface
+	public void portrait() {
+		setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 	}
 
 	// https://stackoverflow.com/questions/42900826/how-can-i-show-an-image-from-link-in-android-push-notification
