@@ -1,6 +1,10 @@
 # Fisify Android app
 
-The password for signing the App bundle is android15 for both questions, the key alias is fisify.
+The password for signing the App bundle with `key.jks` is `Fisify2025!` for both questions, the key alias is `fisify`.
+
+🚨 IMPORTANT 🚨
+
+Keep in mind that Google Play's SHA-1 signatures can only exist in one Firebase project, so if they are set in production, Google Sign-In on Android will stop working.
 
 ## Load localhost from Webview:
 - https://stackoverflow.com/questions/52492970/android-webview-not-loading-for-localhost-server

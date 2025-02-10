@@ -1,7 +1,3 @@
-/*
-plugins {
-    id 'com.android.application'
-} */
 apply plugin: 'com.android.application'
 apply plugin: 'com.google.gms.google-services'
 
@@ -13,8 +9,8 @@ android {
         applicationId "com.fisify.app"
         minSdkVersion 21
         targetSdkVersion 34
-        versionCode 28
-        versionName "1.37"
+        versionCode 52
+        versionName "1.61"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
