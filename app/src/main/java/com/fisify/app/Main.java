@@ -68,20 +68,20 @@ public class Main extends AppCompatActivity
 	private final String WEBVIEW_PRODUCTION_URL = "https://app.fisify.com";
 	private final String WEBVIEW_STAGING_URL = "https://frontend-git-merge-nextjs-fisify.vercel.app";
 	private final String WEBVIEW_LOCAL_URL = "https://c8c7-84-78-155-157.ngrok-free.app";
-	private final String WEBVIEW_URL = WEBVIEW_STAGING_URL;
+	private final String WEBVIEW_URL = WEBVIEW_PRODUCTION_URL;
 
 	private final String VERSION_STAGING_URL = "https://staging-backend-fisify.herokuapp.com/app/version";
 	private final String VERSION_PRODUCTION_URL = "https://production-backend-fisify.herokuapp.com/app/version";
-	private final String VERSION_URL = VERSION_STAGING_URL;
+	private final String VERSION_URL = VERSION_PRODUCTION_URL;
 
 	private final String NOTIFICATIONS_PRODUCTION_URL = "https://production-backend-fisify.herokuapp.com/api/devices";
 	private final String NOTIFICATIONS_STAGING_URL = "https://staging-backend-fisify.herokuapp.com/api/devices";
-	private final String NOTIFICATIONS_URL = NOTIFICATIONS_STAGING_URL;
+	private final String NOTIFICATIONS_URL = NOTIFICATIONS_PRODUCTION_URL;
 
 	// find on google-service.json
 	private final String PRODUCTION_CLIENT_ID = "602430523502-vdpv1vadcrd1em4a8nbo19hp4cdovgjn.apps.googleusercontent.com";
 	private final String DEVELOPMENT_CLIENT_ID = "811151055222-b233lsqtl1bs7lssdc8103apr8bl9de4.apps.googleusercontent.com";
-	private final String CLIENT_ID = DEVELOPMENT_CLIENT_ID;
+	private final String CLIENT_ID = PRODUCTION_CLIENT_ID;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
