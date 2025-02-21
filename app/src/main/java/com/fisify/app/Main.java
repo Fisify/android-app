@@ -11,6 +11,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
 import android.view.View;
 import android.view.Window;
@@ -64,24 +65,12 @@ public class Main extends AppCompatActivity
 	private static final int RC_SIGN_IN = 9001;
 
 	private GoogleSignInClient mGoogleSignInClient;
+	private int SPLASH_SCREEN_TIMEOUT = 1000;
 
-	private final String WEBVIEW_PRODUCTION_URL = "https://app.fisify.com";
-	private final String WEBVIEW_STAGING_URL = "https://frontend-git-merge-nextjs-fisify.vercel.app";
-	private final String WEBVIEW_LOCAL_URL = "https://c8c7-84-78-155-157.ngrok-free.app";
-	private final String WEBVIEW_URL = WEBVIEW_PRODUCTION_URL;
-
-	private final String VERSION_STAGING_URL = "https://staging-backend-fisify.herokuapp.com/app/version";
-	private final String VERSION_PRODUCTION_URL = "https://production-backend-fisify.herokuapp.com/app/version";
-	private final String VERSION_URL = VERSION_PRODUCTION_URL;
-
-	private final String NOTIFICATIONS_PRODUCTION_URL = "https://production-backend-fisify.herokuapp.com/api/devices";
-	private final String NOTIFICATIONS_STAGING_URL = "https://staging-backend-fisify.herokuapp.com/api/devices";
-	private final String NOTIFICATIONS_URL = NOTIFICATIONS_PRODUCTION_URL;
-
-	// find on google-service.json
-	private final String PRODUCTION_CLIENT_ID = "602430523502-vdpv1vadcrd1em4a8nbo19hp4cdovgjn.apps.googleusercontent.com";
-	private final String DEVELOPMENT_CLIENT_ID = "811151055222-b233lsqtl1bs7lssdc8103apr8bl9de4.apps.googleusercontent.com";
-	private final String CLIENT_ID = PRODUCTION_CLIENT_ID;
+	private final String WEBVIEW_URL = BuildConfig.WEBVIEW_URL;
+	private final String VERSION_URL = BuildConfig.VERSION_CHECK_ENDPOINT_URL;
+	private final String NOTIFICATIONS_URL = BuildConfig.NOTIFICATION_DEVICES_URL;
+	private final String CLIENT_ID = BuildConfig.FIREBASE_CLIENT_ID;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
@@ -90,26 +79,31 @@ public class Main extends AppCompatActivity
 
 		// Force to use Light Mode always
 		AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
-
-		initializeFirebaseAuthentication();
-
 		context = getApplicationContext();
 		window = getWindow();
 
-		showSplashScreen();
-
 		int MY_PERMISSIONS_REQUEST_CAMERA = 0;
-
 		if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED || ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
 			ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA}, MY_PERMISSIONS_REQUEST_CAMERA);
 		}
 
+		showSplashScreen();
+		initializeFirebaseAuthentication();
 		hideSystemUI();
-		startLoadingWebView();
-		acceptBeforeUnloadAlertsAutomatically();
-		showWebViewWhenLoaded();
 
-		listenForNotificationRequestsFromJavascript();
+		new Handler().postDelayed(new Runnable() {
+			@Override
+			public void run() {
+				setContentView(R.layout.layout);
+				web = findViewById(R.id.webView);
+				startLoadingWebView();
+				AndroidBug5497Workaround.assistActivity(Main.this);
+				acceptBeforeUnloadAlertsAutomatically();
+				showWebViewWhenLoaded();
+
+				listenForNotificationRequestsFromJavascript();
+			}
+		}, SPLASH_SCREEN_TIMEOUT);
 	}
 
 	@Override
@@ -194,7 +188,7 @@ public class Main extends AppCompatActivity
 	@Override
 	public void onBackPressed() {
 		web.evaluateJavascript("location.href", value -> {
-			String[] paths = {"/login\"", "/home\"", "/wellness\"", "/education\"", "/habit\"", "/stats\""};
+			String[] paths = {"/login", "/home", "/wellness\"", "/education\"", "/habit\"", "/stats\""};
 
 			boolean shouldFinishApp = false;
 			for (String path : paths) {
@@ -241,8 +235,6 @@ public class Main extends AppCompatActivity
 	@SuppressLint("SetJavaScriptEnabled")
 	private void startLoadingWebView() {
 		WebView.setWebContentsDebuggingEnabled(true);
-
-		web = new WebView(context);
 
 		web.getSettings().setJavaScriptEnabled(true);
 		web.getSettings().setDomStorageEnabled(true);
@@ -300,20 +292,18 @@ public class Main extends AppCompatActivity
 	}
 
 	private void showWebViewWhenLoaded() {
-		Activity activity = this;
-
 		web.setWebViewClient(new WebViewClient() {
 			@Override
 			public void onPageFinished(WebView view, String url) {
-				setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT); // Bloquear de nuevo en portrait
-				// Configurar UI inmersiva y ocultar permanentemente el Status Bar
-				getWindow().getDecorView().setSystemUiVisibility(
-						View.SYSTEM_UI_FLAG_FULLSCREEN |
-								View.SYSTEM_UI_FLAG_HIDE_NAVIGATION |
-								View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
-				);
-				activity.setContentView(web);
-				AndroidBug5497Workaround.assistActivity(activity);
+				runOnUiThread(() -> {
+					setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT); // Bloquear de nuevo en portrait
+					// Configurar UI inmersiva y ocultar permanentemente el Status Bar
+					getWindow().getDecorView().setSystemUiVisibility(
+							View.SYSTEM_UI_FLAG_FULLSCREEN |
+									View.SYSTEM_UI_FLAG_HIDE_NAVIGATION |
+									View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+					);
+				});
 			}
 		});
 	}

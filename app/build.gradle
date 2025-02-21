@@ -16,9 +16,22 @@ android {
     }
 
     buildTypes {
+        // Initialize environment variables
+        debug {
+            buildConfigField "String", "WEBVIEW_URL", "\"${WEBVIEW_URL_DEBUG}\""
+            buildConfigField "String", "VERSION_CHECK_ENDPOINT_URL", "\"${VERSION_CHECK_ENDPOINT_URL_DEBUG}\""
+            buildConfigField "String", "NOTIFICATION_DEVICES_URL", "\"${NOTIFICATION_DEVICES_URL_DEBUG}\""
+            buildConfigField "String", "FIREBASE_CLIENT_ID", "\"${FIREBASE_CLIENT_ID_DEBUG}\""
+        }
         release {
+            buildConfigField "String", "WEBVIEW_URL", "\"${WEBVIEW_URL_RELEASE}\""
+            buildConfigField "String", "VERSION_CHECK_ENDPOINT_URL", "\"${VERSION_CHECK_ENDPOINT_URL_RELEASE}\""
+            buildConfigField "String", "NOTIFICATION_DEVICES_URL", "\"${NOTIFICATION_DEVICES_URL_RELEASE}\""
+            buildConfigField "String", "FIREBASE_CLIENT_ID", "\"${FIREBASE_CLIENT_ID_RELEASE}\""
+
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.debug
         }
     }
     compileOptions {
