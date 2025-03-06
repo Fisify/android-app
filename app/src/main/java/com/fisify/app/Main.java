@@ -9,6 +9,7 @@ import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -22,6 +23,7 @@ import android.webkit.JavascriptInterface;
 import android.webkit.JsResult;
 import android.webkit.PermissionRequest;
 import android.webkit.WebChromeClient;
+import android.webkit.WebResourceRequest;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
@@ -304,6 +306,19 @@ public class Main extends AppCompatActivity
 									View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
 					);
 				});
+			}
+
+			@Override
+			public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
+				// Loads the URL on device browser if not from our domain (especially for webinars)
+				String url = request.getUrl().toString();
+				if (url.contains(WEBVIEW_URL)) {
+					return false; // Cargar en el WebView
+				} else {
+					Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+					view.getContext().startActivity(intent);
+					return true; // Cargar en navegador
+				}
 			}
 		});
 	}

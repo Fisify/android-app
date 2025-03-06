@@ -9,8 +9,8 @@ android {
         applicationId "com.fisify.app"
         minSdkVersion 21
         targetSdkVersion 34
-        versionCode 55
-        versionName "2.0.2"
+        versionCode 56
+        versionName "2.0.3"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
