@@ -2,7 +2,6 @@ package com.fisify.app;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
-import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
@@ -23,7 +22,6 @@ import android.webkit.JavascriptInterface;
 import android.webkit.JsResult;
 import android.webkit.PermissionRequest;
 import android.webkit.WebChromeClient;
-import android.webkit.WebResourceRequest;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
@@ -307,19 +305,6 @@ public class Main extends AppCompatActivity
 					);
 				});
 			}
-
-			@Override
-			public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
-				// Loads the URL on device browser if not from our domain (especially for webinars)
-				String url = request.getUrl().toString();
-				if (url.contains(WEBVIEW_URL)) {
-					return false; // Cargar en el WebView
-				} else {
-					Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
-					view.getContext().startActivity(intent);
-					return true; // Cargar en navegador
-				}
-			}
 		});
 	}
 
@@ -393,6 +378,19 @@ public class Main extends AppCompatActivity
 	@JavascriptInterface
 	public void portrait() {
 		setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+	}
+
+	@JavascriptInterface
+	public void openExternalUrl(String url) {
+		runOnUiThread(() -> {
+			try {
+				Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+				intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+				context.startActivity(intent);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		});
 	}
 
 	// https://stackoverflow.com/questions/42900826/how-can-i-show-an-image-from-link-in-android-push-notification
