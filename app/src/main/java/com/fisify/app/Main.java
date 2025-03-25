@@ -65,7 +65,7 @@ public class Main extends AppCompatActivity
 	private static final int RC_SIGN_IN = 9001;
 
 	private GoogleSignInClient mGoogleSignInClient;
-	private int SPLASH_SCREEN_TIMEOUT = 500;
+	private int SPLASH_SCREEN_TIMEOUT = 1000;
 
 	private final String WEBVIEW_URL = BuildConfig.WEBVIEW_URL;
 	private final String VERSION_URL = BuildConfig.VERSION_CHECK_ENDPOINT_URL;
@@ -76,8 +76,6 @@ public class Main extends AppCompatActivity
 	protected void onCreate(Bundle savedInstanceState)
 	{
 		super.onCreate(savedInstanceState);
-		setContentView(R.layout.splash);
-		hideSystemUI();
 
 		// Force to use Light Mode always
 		AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
@@ -88,10 +86,10 @@ public class Main extends AppCompatActivity
 		if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED || ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
 			ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA}, MY_PERMISSIONS_REQUEST_CAMERA);
 		}
-		initializeFirebaseAuthentication();
 
-		web = new WebView(this);
-		web.setVisibility(View.INVISIBLE);
+		showSplashScreen();
+		initializeFirebaseAuthentication();
+		hideSystemUI();
 
 		new Handler().postDelayed(new Runnable() {
 			@Override
@@ -205,6 +203,15 @@ public class Main extends AppCompatActivity
 				web.evaluateJavascript("history.back()",null);
 			}
 		});
+	}
+
+	private void showSplashScreen() {
+		getWindow().getDecorView().setSystemUiVisibility(
+				View.SYSTEM_UI_FLAG_FULLSCREEN |
+						View.SYSTEM_UI_FLAG_HIDE_NAVIGATION |
+						View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+		);
+		setContentView(R.layout.splash);
 	}
 
 	private void getVersion(final IVersionCallback callback) {
