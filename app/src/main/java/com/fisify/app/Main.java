@@ -65,7 +65,7 @@ public class Main extends AppCompatActivity
 	private static final int RC_SIGN_IN = 9001;
 
 	private GoogleSignInClient mGoogleSignInClient;
-	private int SPLASH_SCREEN_TIMEOUT = 1000;
+	private int SPLASH_SCREEN_TIMEOUT = 2000;
 
 	private final String WEBVIEW_URL = BuildConfig.WEBVIEW_URL;
 	private final String VERSION_URL = BuildConfig.VERSION_CHECK_ENDPOINT_URL;
@@ -90,18 +90,13 @@ public class Main extends AppCompatActivity
 		showSplashScreen();
 		initializeFirebaseAuthentication();
 		hideSystemUI();
+		View mainView = loadWebViewOnBackground();
 
 		new Handler().postDelayed(new Runnable() {
 			@Override
 			public void run() {
-				setContentView(R.layout.layout);
-				web = findViewById(R.id.webView);
-				startLoadingWebView();
-				AndroidBug5497Workaround.assistActivity(Main.this);
-				acceptBeforeUnloadAlertsAutomatically();
-				showWebViewWhenLoaded();
-
-				listenForNotificationRequestsFromJavascript();
+				setContentView(mainView);
+				web.setVisibility(View.VISIBLE);
 			}
 		}, SPLASH_SCREEN_TIMEOUT);
 	}
@@ -117,6 +112,22 @@ public class Main extends AppCompatActivity
 				.requestEmail()
 				.build();
 		mGoogleSignInClient = GoogleSignIn.getClient(this, gso);
+	}
+
+	protected View loadWebViewOnBackground() {
+		// Inicializar el WebView en segundo plano pero sin mostrarlo aún
+		View mainView = getLayoutInflater().inflate(R.layout.layout, null);
+		web = mainView.findViewById(R.id.webView);
+		web.setVisibility(View.GONE); // Ocultar inicialmente
+
+		// Configurar el WebView
+		startLoadingWebView();
+		AndroidBug5497Workaround.assistActivity(this);
+		acceptBeforeUnloadAlertsAutomatically();
+		showWebViewWhenLoaded();
+		listenForNotificationRequestsFromJavascript();
+
+		return mainView;
 	}
 
 	@SuppressLint("NewApi") // o @SuppressLint("deprecation") según tu preferencia
