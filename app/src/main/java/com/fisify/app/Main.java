@@ -2,6 +2,7 @@ package com.fisify.app;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
@@ -21,6 +22,7 @@ import android.view.WindowManager;
 import android.webkit.JavascriptInterface;
 import android.webkit.JsResult;
 import android.webkit.PermissionRequest;
+import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -71,6 +73,9 @@ public class Main extends AppCompatActivity
 	private final String VERSION_URL = BuildConfig.VERSION_CHECK_ENDPOINT_URL;
 	private final String NOTIFICATIONS_URL = BuildConfig.NOTIFICATION_DEVICES_URL;
 	private final String CLIENT_ID = BuildConfig.FIREBASE_CLIENT_ID;
+
+	private static final int FILE_CHOOSER_REQUEST_CODE = 100;
+	private ValueCallback<Uri[]> fileChooserCallback;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
@@ -182,6 +187,16 @@ public class Main extends AppCompatActivity
 			} catch (ApiException e) {
 				// Google Sign In failed, update UI appropriately
 				Log.w(TAG, "Google sign in failed", e);
+			}
+		}
+
+		if (requestCode == FILE_CHOOSER_REQUEST_CODE) {
+			if (fileChooserCallback != null) {
+				Uri[] result = (resultCode == RESULT_OK && data != null)
+						? new Uri[]{data.getData()}
+						: null;
+				fileChooserCallback.onReceiveValue(result);
+				fileChooserCallback = null;
 			}
 		}
 	}
@@ -297,6 +312,27 @@ public class Main extends AppCompatActivity
 			@Override
 			public Bitmap getDefaultVideoPoster() {
 				return Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888);
+			}
+
+			@Override
+			public boolean onShowFileChooser(
+					WebView webView,
+					ValueCallback<Uri[]> filePathCallback,
+					FileChooserParams fileChooserParams
+			) {
+				if (fileChooserCallback != null) {
+					fileChooserCallback.onReceiveValue(null);
+				}
+				fileChooserCallback = filePathCallback;
+
+				Intent intent = fileChooserParams.createIntent();
+				try {
+					startActivityForResult(intent, FILE_CHOOSER_REQUEST_CODE);
+				} catch (ActivityNotFoundException e) {
+					fileChooserCallback = null;
+					return false;
+				}
+				return true;
 			}
 		};
 		web.setWebChromeClient(webChromeClient);
