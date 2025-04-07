@@ -9,8 +9,8 @@ android {
         applicationId "com.fisify.app"
         minSdkVersion 21
         targetSdkVersion 34
-        versionCode 61
-        versionName "2.0.8"
+        versionCode 62
+        versionName "2.0.9"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -19,17 +19,23 @@ android {
         // Initialize environment variables
         debug {
             buildConfigField "String", "WEBVIEW_URL", "\"${WEBVIEW_URL_DEBUG}\""
+            buildConfigField "String", "WEBVIEW_HOST", "\"${WEBVIEW_HOST_DEBUG}\""
             buildConfigField "String", "VERSION_CHECK_ENDPOINT_URL", "\"${VERSION_CHECK_ENDPOINT_URL_DEBUG}\""
             buildConfigField "String", "NOTIFICATION_DEVICES_URL", "\"${NOTIFICATION_DEVICES_URL_DEBUG}\""
             buildConfigField "String", "FIREBASE_CLIENT_ID", "\"${FIREBASE_CLIENT_ID_DEBUG}\""
+            buildConfigField "String", "EXPECTED_WEBVIEW_PIN", "\"${EXPECTED_WEBVIEW_PIN_DEBUG}\""
+
         }
         release {
             buildConfigField "String", "WEBVIEW_URL", "\"${WEBVIEW_URL_RELEASE}\""
+            buildConfigField "String", "WEBVIEW_HOST", "\"${WEBVIEW_HOST_RELEASE}\""
             buildConfigField "String", "VERSION_CHECK_ENDPOINT_URL", "\"${VERSION_CHECK_ENDPOINT_URL_RELEASE}\""
             buildConfigField "String", "NOTIFICATION_DEVICES_URL", "\"${NOTIFICATION_DEVICES_URL_RELEASE}\""
             buildConfigField "String", "FIREBASE_CLIENT_ID", "\"${FIREBASE_CLIENT_ID_RELEASE}\""
+            buildConfigField "String", "EXPECTED_WEBVIEW_PIN", "\"${EXPECTED_WEBVIEW_PIN_RELEASE}\""
 
-            minifyEnabled false
+            minifyEnabled true
+            shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             signingConfig signingConfigs.debug
         }
@@ -47,6 +53,7 @@ dependencies {
     implementation "androidx.work:work-runtime:2.8.1"
     implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'com.google.android.material:material:1.9.0'
+    implementation 'com.squareup.okhttp3:okhttp:4.9.3'
 
     // firebase dependencies
     implementation platform('com.google.firebase:firebase-bom:28.4.2')

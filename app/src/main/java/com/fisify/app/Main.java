@@ -2,6 +2,7 @@ package com.fisify.app;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.app.AlertDialog;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
@@ -26,6 +27,7 @@ import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
@@ -39,6 +41,9 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 import com.fisify.app.interfaces.IVersionCallback;
+import com.fisify.app.security.InstrumentationDetector;
+import com.fisify.app.security.RootChecker;
+import com.fisify.app.security.SSLPinning;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
@@ -55,6 +60,7 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Locale;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class Main extends AppCompatActivity
 {
@@ -77,15 +83,23 @@ public class Main extends AppCompatActivity
 	private static final int FILE_CHOOSER_REQUEST_CODE = 100;
 	private ValueCallback<Uri[]> fileChooserCallback;
 
+	private final AtomicBoolean isSecurityCheckValid = new AtomicBoolean(false);
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
 	{
 		super.onCreate(savedInstanceState);
 
+		// Security checks
+		InstrumentationDetector.performSecurityChecks(this);
+		checkRootAndShowDialog();
+		checkSSLPinning();
+
 		// Force to use Light Mode always
 		AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
 		context = getApplicationContext();
 		window = getWindow();
+		window.setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE);
 
 		int MY_PERMISSIONS_REQUEST_CAMERA = 0;
 		if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED || ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
@@ -109,6 +123,53 @@ public class Main extends AppCompatActivity
 	@Override
 	protected void onDestroy() {
 		super.onDestroy();
+	}
+
+	protected void checkSSLPinning() {
+		// Check SSL pinning for security between APP and Webview
+		new Thread(() -> {
+			try {
+				SSLPinning.makeRequestWithPinning();
+				isSecurityCheckValid.set(true);
+			} catch (Exception e) {
+				runOnUiThread(() -> {
+					abortWebViewLoading();
+					showErrorDialog("Security error", "Invalid certificate");
+				});
+			}
+		}).start();
+	}
+
+	protected void checkRootAndShowDialog() {
+		// Checks if device is running on root mode and shows an alert in that case
+		if (RootChecker.isDeviceRooted()) {
+			showErrorDialog("Unsupported device", "This app cannot run on rooted devices for security reasons.");
+			isSecurityCheckValid.set(false);
+			abortWebViewLoading();
+			return;
+		}
+
+		isSecurityCheckValid.set(true);
+	}
+
+	private void showErrorDialog(String title, String message) {
+		AlertDialog.Builder builder = new AlertDialog.Builder(this);
+		builder.setTitle(title)
+			.setMessage(message)
+			.setCancelable(false)
+			.setPositiveButton("Close", (dialog, which) -> {
+				finishActivity(0);
+				System.exit(0);
+			})
+			.show();
+	}
+
+	private void abortWebViewLoading() {
+		if (web != null) {
+			web.stopLoading();
+			web.loadUrl("about:blank");
+			web.destroy();
+		}
 	}
 
 	protected void initializeFirebaseAuthentication() {
@@ -340,6 +401,13 @@ public class Main extends AppCompatActivity
 
 	private void showWebViewWhenLoaded() {
 		web.setWebViewClient(new WebViewClient() {
+			@Override
+			public void onPageStarted(WebView view, String url, Bitmap favicon) {
+				if (!isSecurityCheckValid.get()) {
+					view.stopLoading();
+				}
+			}
+
 			@Override
 			public void onPageFinished(WebView view, String url) {
 				runOnUiThread(() -> {

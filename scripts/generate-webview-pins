@@ -1,0 +1,27 @@
+#!/bin/bash
+
+get_pin_fingerprint() {
+    local domain="$1"
+    local name="$2"
+    echo -n "$name pin: "
+
+    # Capturar el certificado en formato PEM primero
+    cert=$(openssl s_client -connect "$domain:443" -servername "$domain" -showcerts </dev/null 2>/dev/null | openssl x509 -outform PEM 2>/dev/null)
+
+    if [ -z "$cert" ]; then
+        echo "Error: No se pudo obtener el certificado de $domain"
+        return 1
+    fi
+
+    # Extraer fingerprint SHA-256
+    echo "$cert" | openssl x509 -pubkey -noout 2>/dev/null | \
+        openssl pkey -pubin -outform DER 2>/dev/null | \
+        openssl dgst -sha256 -binary | \
+        base64
+}
+
+# Obtener fingerprints
+get_pin_fingerprint "frontend-git-staging-fisify.vercel.app" "Staging"
+get_pin_fingerprint "app.fisify.com" "Production"
+
+exit

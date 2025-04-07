@@ -6,6 +6,15 @@ The password for signing the App bundle with `key.jks` is `Fisify2025!` for both
 
 Keep in mind that Google Play's SHA-1 signatures can only exist in one Firebase project, so if they are set in production, Google Sign-In on Android will stop working.
 
+## Get WebView servers pins
+To ensure security loading the WebView, we need to get the server's certificate pin.
+
+```
+$ ./scripts/generate-webview-certs
+```
+
+Copy values from staging and production and paste them on the `gradle.properties` file, on `EXPECTED_WEBVIEW_PIN_[ENV]` keys.
+
 ## Load localhost from Webview:
 - https://stackoverflow.com/questions/52492970/android-webview-not-loading-for-localhost-server
 
