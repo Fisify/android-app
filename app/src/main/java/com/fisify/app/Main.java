@@ -10,12 +10,15 @@ import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
+import android.graphics.Rect;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
 import android.view.View;
+import android.view.ViewTreeObserver;
 import android.view.Window;
 import android.view.WindowInsets;
 import android.view.WindowInsetsController;
@@ -27,12 +30,16 @@ import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.FrameLayout;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 
 import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.Request;
@@ -84,6 +91,7 @@ public class Main extends AppCompatActivity
 	private ValueCallback<Uri[]> fileChooserCallback;
 
 	private final AtomicBoolean isSecurityCheckValid = new AtomicBoolean(false);
+	private FrameLayout rootLayout;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
@@ -107,14 +115,31 @@ public class Main extends AppCompatActivity
 
 		showSplashScreen();
 		initializeFirebaseAuthentication();
-		hideSystemUI();
 		View mainView = loadWebViewOnBackground();
+
+		rootLayout = findViewById(android.R.id.content);
+
+		rootLayout.getViewTreeObserver().addOnGlobalLayoutListener(() -> {
+			Rect r = new Rect();
+			rootLayout.getWindowVisibleDisplayFrame(r);
+			int screenHeight = rootLayout.getRootView().getHeight();
+			int heightDiff = screenHeight - r.height();
+
+			boolean isKeyboardVisible = heightDiff > screenHeight * 0.15; // Umbral aproximado
+
+			if (isKeyboardVisible) {
+				showSystemUI();
+			} else {
+				hideSystemUI();
+			}
+		});
 
 		new Handler().postDelayed(new Runnable() {
 			@Override
 			public void run() {
 				setContentView(mainView);
 				web.setVisibility(View.VISIBLE);
+				hideSystemUI();
 			}
 		}, SPLASH_SCREEN_TIMEOUT);
 	}
@@ -187,7 +212,6 @@ public class Main extends AppCompatActivity
 
 		// Configurar el WebView
 		startLoadingWebView();
-		AndroidBug5497Workaround.assistActivity(this);
 		acceptBeforeUnloadAlertsAutomatically();
 		showWebViewWhenLoaded();
 		listenForNotificationRequestsFromJavascript();
@@ -195,31 +219,35 @@ public class Main extends AppCompatActivity
 		return mainView;
 	}
 
-	@SuppressLint("NewApi") // o @SuppressLint("deprecation") según tu preferencia
+	@SuppressLint("NewApi")
 	private void hideSystemUI() {
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-			// Para Android 11 (API 30) en adelante
-			WindowInsetsController insetsController = getWindow().getInsetsController();
-			if (insetsController != null) {
-				insetsController.hide(WindowInsets.Type.statusBars() | WindowInsets.Type.navigationBars());
-			}
+			// Android 11+ - Modo inmersivo pero permitiendo ajuste de teclado
 			getWindow().setDecorFitsSystemWindows(false);
 		} else {
-			// Para versiones anteriores
+			// Versiones anteriores - Modo inmersivo mejorado
 			getWindow().getDecorView().setSystemUiVisibility(
-					View.SYSTEM_UI_FLAG_FULLSCREEN
+					View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+							| View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
 							| View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
 							| View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+							| View.SYSTEM_UI_FLAG_FULLSCREEN
 							| View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
 			);
 		}
+		// Hacer la barra de estado transparente
+		getWindow().setStatusBarColor(Color.TRANSPARENT);
+	}
 
-		// Dibujar detrás del notch (API 28+)
-		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-			WindowManager.LayoutParams lp = getWindow().getAttributes();
-			lp.layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES;
-			getWindow().setAttributes(lp);
+	@SuppressLint("NewApi")
+	private void showSystemUI() {
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+			getWindow().setDecorFitsSystemWindows(true);
+		} else {
+			getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_VISIBLE);
 		}
+		// Restaurar el color de la barra de estado (puedes cambiarlo si lo necesitas)
+		getWindow().setStatusBarColor(Color.TRANSPARENT);
 	}
 
 	@JavascriptInterface
@@ -411,12 +439,17 @@ public class Main extends AppCompatActivity
 			public void onPageFinished(WebView view, String url) {
 				runOnUiThread(() -> {
 					setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT); // Bloquear de nuevo en portrait
-					// Configurar UI inmersiva y ocultar permanentemente el Status Bar
-					getWindow().getDecorView().setSystemUiVisibility(
-							View.SYSTEM_UI_FLAG_FULLSCREEN |
-									View.SYSTEM_UI_FLAG_HIDE_NAVIGATION |
-									View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
-					);
+					new Handler().postDelayed(() -> {
+						String js = "(function() {" +
+								"var inputs = document.querySelectorAll('input, textarea');" +
+								"for (var i = 0; i < inputs.length; i++) {" +
+								"inputs[i].addEventListener('focus', function() {" +
+								"this.scrollIntoView({ behavior: 'smooth', block: 'nearest' });" +
+								"});" +
+								"}" +
+								"})();";
+						view.evaluateJavascript(js, null);
+					}, 500); // Retraso de 500 milisegundos (ajusta si es necesario)
 				});
 			}
 		});
